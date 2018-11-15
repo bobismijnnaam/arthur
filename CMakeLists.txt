@@ -4,6 +4,8 @@ project(arthur)
 set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_C_COMPILER "gcc-7")
 
+# set(CMAKE_VERBOSE_MAKEFILE ON)
+
 # includes cmake/FindSDL2.cmake
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
