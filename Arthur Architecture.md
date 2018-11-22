@@ -26,6 +26,8 @@ https://github.com/ocornut/imgui/issues/1886
 - Protocol
     - Communicates with the server
     - Sends:
+        - Connected
+        - Disconnected
         - GameStarted
         - ProduceMove
         - MoveMade
@@ -52,3 +54,5 @@ https://github.com/ocornut/imgui/issues/1886
         - DisconnectFromServer
     - Receives:
         - LobbyInfo
+        - Connected
+        - Disconnected
