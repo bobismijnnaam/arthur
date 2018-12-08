@@ -10,68 +10,11 @@
 // - a general (slow) 5 in a row checking function that checks everything
 // - a five in a row checking function that takes a quadrant
 
-template<typename T, unsigned int N>
-class FixVector {
-public:
-    std::array<T, N> data;
-    int size = 0;
-
-    T& get(int index) {
-        return data.at(index);
-    }
-
-    void set(int index, T const & elem) {
-        data[index] = elem;
-    }
-
-    void push(T const & elem) {
-        data[size++] = elem;
-    }
-
-    T pop() {
-        return data[size--];
-    }
-
-    int getSize() {
-        return size;
-    }
-
-    int getCapacity() {
-        return N;
-    }
-
-    void clear() {
-        size = 0;
-    }
-
-    bool contains(T const & elem) {
-        for (int i = 0; i < size; ++i) {
-            if (data[i] == elem) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-} ;
-
 int const BOARD_WIDTH = 6;
 int const BOARD_HEIGHT = 6;
 int const NUM_POSITIONS = BOARD_WIDTH * BOARD_HEIGHT;
 int const MAX_NUM_PIECES_PER_COLOR = 3 * 6;
 int const NUM_QUADRANTS = 4;
-
-struct Vec2I {
-    Vec2I() = default;
-    Vec2I(int x, int y);
-
-    int x, y;
-} ;
-
-Vec2I::Vec2I(int x, int y) {
-    this.x = x;
-    this.y = y;
-}
 
 enum class PositionState : uint8_t {
     EMPTY,
