@@ -5,3 +5,10 @@ Vec2i::Vec2i(int x, int y) {
     this->y = y;
 }
 
+std::ostream& operator<<(std::ostream& os, Vec2i const & vec) {
+    return os << "(" << vec.x << ", " << vec.y << ")";
+}
+
+bool operator==(Vec2i const & a, Vec2i const & b) {
+    return a.x == b.x && a.y == b.y;
+}

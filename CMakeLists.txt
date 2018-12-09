@@ -12,7 +12,6 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 
-#Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++17)
 
 ## Find catkin macros and libraries

@@ -1,3 +1,6 @@
+#ifndef FIXVECTOR_H
+#define FIXVECTOR_H
+
 #include <array>
 
 template<typename T, unsigned int N>
@@ -45,4 +48,4 @@ public:
     }
 } ;
 
-
+#endif // FIXVECTOR_H

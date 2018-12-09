@@ -14,5 +14,5 @@ add_subdirectory(daemon)
 include_directories(spectrangle)
 add_subdirectory(spectrangle)
 
-add_subdirectory(infinite_random_test)
+add_subdirectory(tests)
 
