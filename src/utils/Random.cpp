@@ -1,5 +1,3 @@
-#include <cstdint>
-
 /* Original code from: https://stackoverflow.com/questions/1640258/need-a-fast-random-generator-for-c */
 /* static unsigned long x=123456789, y=362436069, z=521288629;
  * 
@@ -21,12 +19,14 @@
 #include <random>
 #include <cstdint>
 
+#include "Random.h"
+
 Random::Random(uint64_t x, uint64_t y, uint64_t z) : x{x}, y{y}, z{z} {}
 
 Random::Random() {
     std::random_device rd;
     std::mt19937 mt(rd());
-    std::uniform_int_distribution<uint64_t> dist();
+    std::uniform_int_distribution<uint64_t> dist;
 
     x = dist(mt);
     y = dist(mt);

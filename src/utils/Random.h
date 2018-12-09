@@ -10,5 +10,5 @@ public:
     uint64_t next();
     uint64_t range(uint64_t max);
     int64_t range(int64_t min, int64_t max);
-}
+} ;
 
