@@ -25,6 +25,13 @@ public:
         return data[size--];
     }
 
+    T remove(int i) {
+        T elem = data[i];
+        data[i] = data[size - 1];
+        size--;
+        return elem;
+    }
+
     int getSize() {
         return size;
     }

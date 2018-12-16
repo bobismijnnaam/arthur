@@ -2,6 +2,7 @@
 #define TRIANGLEGRID_H
 
 #include <array>
+#include <cassert>
 
 #include "FixVector.h"
 #include "Vec2i.h"
@@ -29,7 +30,7 @@ public:
         assert(isPosValid(pos));
 
         int rowStart = pos.y * pos.y;
-        return grid[rowStart] + pos.x;
+        return grid[rowStart + pos.x];
     }
 
     void set(Vec2i const pos, T const & elem) {
@@ -40,6 +41,7 @@ public:
     }
 
     void getNeighbours(Vec2i const pos, FixVector<Vec2i, 3> & vec) {
+        // TODO: Move this to a free function or remove it
         vec.clear();
 
         Vec2i leftNeighbour = pos;
