@@ -127,8 +127,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-# ${catkin_INCLUDE_DIRS}
+    .
+    src/utils
+    src/imgui
+    src/imgui/examples
+    src/imgui/examples/libs/gl3w
+    src/spectrangle
+    test
 )
 
 ## Declare a C++ library
@@ -162,6 +167,7 @@ include_directories(
 # )
 
 add_subdirectory(src)
+add_subdirectory(test)
 
 #############
 ## Install ##
