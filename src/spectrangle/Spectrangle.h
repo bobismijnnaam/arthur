@@ -17,19 +17,18 @@ class Spectrangle {
 public:
     Spectrangle();
 
-    bool isMovePossible(Move const & move);
+    bool isMovePossible(Move const & move) const;
     void applyMove(Move const & move);
-    void getMoves(int player, MoveBuffer& moveBuffer);
-    Color getNeighbourColorAtSide(Vec2i const pos, Side side);
+    Color getNeighbourColorAtSide(Vec2i const pos, Side side) const;
 
-    int getNumTilesAvailable();
+    int getNumTilesAvailable() const;
     void removeTileFromBag(Tile const tile);
-    Tile takeTileFromBag(int index);
+    Tile takeTileFromBag(int i);
 
-    int getPlayerNumTiles(int player);
-    Tile getTileFromPlayer(int index);
-    void giveTileToPlayer(Tile const tile);
-    Tile takeTileFromPlayer(int index);
+    int getPlayerNumTiles(int player) const;
+    Tile getTileFromPlayer(int player, int i) const;
+    void giveTileToPlayer(int player, Tile const tile);
+    Tile takeTileFromPlayer(int player, int i);
 
     bool isBagEmpty();
 

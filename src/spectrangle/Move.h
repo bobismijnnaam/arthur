@@ -23,8 +23,12 @@ struct Tile {
     Tile() = default;
     Tile(Color side1, Color side2, Color side3);
 
+    bool isSymmetrical() const;
+
     std::array<Color, 3> sides;
 } ;
+
+bool operator==(Tile const & a, Tile const & b);
 
 struct Move {
     Move() = default;

@@ -18,7 +18,7 @@ public:
 
     std::array<T, NUM_ELEMS> grid;
 
-    bool isPosValid(Vec2i const pos) {
+    static bool isPosValid(Vec2i const pos) {
         int rowStart = pos.y * pos.y;
         int rowEnd = (pos.y + 1) * (pos.y + 1);
 
@@ -27,6 +27,13 @@ public:
     }
 
     T& get(Vec2i const pos) {
+        assert(isPosValid(pos));
+
+        int rowStart = pos.y * pos.y;
+        return grid[rowStart + pos.x];
+    }
+
+    T const & get(Vec2i const pos) const {
         assert(isPosValid(pos));
 
         int rowStart = pos.y * pos.y;

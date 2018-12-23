@@ -20,7 +20,7 @@ Spectrangle::Spectrangle() {
 /**
  * Given a move, checks if the move is possible.
  */
-bool Spectrangle::isMovePossible(Move const & move) {
+bool Spectrangle::isMovePossible(Move const & move) const {
     if (!grid.isPosValid(move.pos)) {
         return false;
     }
@@ -103,13 +103,13 @@ Side neighbouringSide(Vec2i const & pos, Side side) {
     }
 }
 
-Color Spectrangle::getNeighbourColorAtSide(Vec2i const pos, Side side) {
+Color Spectrangle::getNeighbourColorAtSide(Vec2i const pos, Side side) const {
     Side neighbourSide = neighbouringSide(pos, side);
 
     Vec2i neighbour = neighbourCoordinateAtSide(pos, side);
 
     if (grid.isPosValid(neighbour)) {
-        std::optional<Tile>& tile = grid.get(neighbour);
+        std::optional<Tile> const & tile = grid.get(neighbour);
         if (tile.has_value()) {
             return (*tile).sides[neighbourSide];
         } else {
@@ -126,4 +126,62 @@ bool Spectrangle::isBagEmpty() {
 
 void Spectrangle::applyMove(Move const & move) {
     grid.set(move.pos, move.getTile());
+}
+
+int Spectrangle::getNumTilesAvailable() const {
+    return tileBag.getSize();
+}
+
+void Spectrangle::removeTileFromBag(Tile const tile) {
+    tileBag.removeElem(tile);
+}
+
+Tile Spectrangle::takeTileFromBag(int i) {
+    return tileBag.removeIndex(i);
+}
+
+int Spectrangle::getPlayerNumTiles(int player) const {
+    return playerBags[player].getSize();
+}
+
+Tile Spectrangle::getTileFromPlayer(int player, int i) const {
+    return playerBags[player].get(i);
+}
+
+void Spectrangle::giveTileToPlayer(int player, Tile const tile) {
+    playerBags[player].push(tile);
+}
+
+Tile Spectrangle::takeTileFromPlayer(int player, int i) {
+    return playerBags[player].removeIndex(i);
+}
+
+#include "Random.h"
+
+std::optional<Move> pickRandomMove(Spectrangle const & game, int player, Random & random) {
+
+    std::optional<Move> move;
+    int chanceCounter = 1;
+    int numTiles = game.getPlayerNumTiles(player);
+
+    for (int tileIndex = 0; tileIndex < numTiles; tileIndex++) {
+        Tile tile = game.getTileFromPlayer(player, tileIndex);
+        int maxNumRotations = tile.isSymmetrical() ? 1 : 3;
+        for (Rotation rot = 0; rot < maxNumRotations; rot++) {
+            for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; y++) {
+                int rowLength = (2 * y + 1);
+                for (int x = 0; x < rowLength; x++) {
+                    Move candidateMove({x, y}, tile, rot);
+                    if (game.isMovePossible(candidateMove)) {
+                        if (random.range(chanceCounter) == 0) {
+                            move = candidateMove;
+                        }
+                        chanceCounter++;
+                    }
+                }
+            }
+        }   
+    }
+
+    return move;
 }

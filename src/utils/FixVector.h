@@ -13,6 +13,10 @@ public:
         return data.at(index);
     }
 
+    T const & get(int index) const {
+        return data.at(index);
+    }
+
     void set(int index, T const & elem) {
         data[index] = elem;
     }
@@ -25,18 +29,28 @@ public:
         return data[size--];
     }
 
-    T remove(int i) {
+    T removeIndex(int i) {
         T elem = data[i];
         data[i] = data[size - 1];
         size--;
         return elem;
     }
 
-    int getSize() {
+    void removeElem(T const & t) {
+        for (int i = 0; i < size; i++) {
+            if (data[i] == t) {
+                data[i] = data[size - 1]; 
+                size--;
+                return;
+            }
+        }
+    }
+
+    int getSize() const {
         return size;
     }
 
-    int getCapacity() {
+    int getCapacity() const {
         return N;
     }
 
@@ -44,7 +58,7 @@ public:
         size = 0;
     }
 
-    bool contains(T const & elem) {
+    bool contains(T const & elem) const {
         for (int i = 0; i < size; ++i) {
             if (data[i] == elem) {
                 return true;
