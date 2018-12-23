@@ -39,4 +39,8 @@ private:
 
 } ;
 
+#include "Random.h"
+
+std::optional<Move> pickRandomMove(Spectrangle const & game, int player, Random & random);
+
 #endif // SPECTRANGLE_H
