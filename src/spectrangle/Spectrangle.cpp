@@ -3,87 +3,14 @@
 
 #include "TriangleGrid.h"
 #include "Vec2i.h"
-
-enum class Color : uint8_t {
-    NONE = 0,
-    RED = 1,
-    BLUE = 2,
-    GREEN = 4,
-    YELOW = 8,
-    PURPLE = 16,
-    WHITE = 32
-} ;
-
-struct Tile {
-    Tile() = default;
-    Tile(Color side1, Color side2, Color side3);
-
-    std::array<Color, 3> sides;
-} ;
-
-Tile::Tile(Color side1, Color side2, Color side3) : sides{{side1, side2, side3}} {}
-
-using Rotation = uint8_t;
-using Side = uint8_t;
-
-struct Move {
-    Move() = default;
-    Move(Vec2i pos, Tile tile, Rotation rotation);
-
-    Color getSide(Side side) const;
-
-    Vec2i pos;
-    Tile tile;
-    Rotation rotation;
-} ;
-
-Move::Move(Vec2i pos, Tile tile, Rotation rotation) : pos{pos}, tile{tile}, rotation{rotation} {}
-
-Color Move::getSide(Side side) const {
-    return tile.sides[(rotation + side) % 3];
-}
-
-int const SPECTRANGLE_BOARD_SIDE = 11;
-int const NUM_MAX_POSSIBLE_MOVES = TriangleGrid<int, SPECTRANGLE_BOARD_SIDE>::NUM_ELEMS * 4 * 3;
-int const NUM_TOTAL_TILES = 36;
-int const MAX_TILES_PER_PLAYER = 4;
-int const MAX_NUM_PLAYERS = 4;
+#include "Move.h"
+#include "Spectrangle.h"
 
 std::array<Tile, NUM_TOTAL_TILES> const tileBagStarterSet = {{
     {Color::RED, Color::BLUE, Color::GREEN},
     {Color::RED, Color::BLUE, Color::GREEN},
     {Color::RED, Color::BLUE, Color::GREEN}
 }};
-
-using MoveBuffer = FixVector<Move, NUM_MAX_POSSIBLE_MOVES>;
-using PlayerBag = FixVector<Tile, MAX_TILES_PER_PLAYER>;
-
-class Spectrangle {
-public:
-    Spectrangle();
-
-    bool isMovePossible(Move const & move);
-    void applyMove(Move const & move);
-    void getMoves(int player, MoveBuffer& moveBuffer);
-    Color getNeighbourColorAtSide(Vec2i const pos, Side side);
-
-    int getNumTilesAvailable();
-    void removeTileFromBag(Tile const tile);
-    Tile takeTileFromBag(int index);
-
-    int getPlayerNumTiles(int player);
-    Tile getTileFromPlayer(int index);
-    void giveTileToPlayer(Tile const tile);
-    Tile takeTileFromPlayer(int index);
-
-    bool isBagEmpty();
-
-private:
-    TriangleGrid<std::optional<Tile>, SPECTRANGLE_BOARD_SIDE> grid;
-    FixVector<Tile, NUM_TOTAL_TILES> tileBag;
-    std::array<PlayerBag, MAX_NUM_PLAYERS> playerBags;
-
-} ;
 
 Spectrangle::Spectrangle() {
     tileBag.data = tileBagStarterSet;
@@ -146,15 +73,50 @@ Vec2i neighbourCoordinateAtSide(Vec2i const pos, Side side) {
     }
 }
 
+Side neighbouringSide(Vec2i const & pos, Side side) {
+    switch (side) {
+        case 0:
+            if (pos.x % 2 == 0) {
+                return 1;
+            } else {
+                return 2;
+            }
+        case 1:
+            if (pos.x % 2 == 0) {
+                return 2;
+            } else {
+                return 0;
+            }
+        case 2:
+            if (pos.x % 2 == 0) {
+                return 0;
+            } else {
+                return 1;
+            }
+    }
+}
+
 Color Spectrangle::getNeighbourColorAtSide(Vec2i const pos, Side side) {
-    Side neighbourSide = (side + 2) % 3;
+    Side neighbourSide = neighbouringSide(pos, side);
 
     Vec2i neighbour = neighbourCoordinateAtSide(pos, side);
 
-    std::optional<Tile>& tile = grid.get(neighbour);
-    if (tile.has_value()) {
-        return (*tile).sides[neighbourSide];
+    if (grid.isPosValid(neighbour)) {
+        std::optional<Tile>& tile = grid.get(neighbour);
+        if (tile.has_value()) {
+            return (*tile).sides[neighbourSide];
+        } else {
+            return Color::NONE;
+        }
     } else {
         return Color::NONE;
-    }
+    }   
+}
+
+bool Spectrangle::isBagEmpty() {
+    return tileBag.getSize() == 0;
+}
+
+void Spectrangle::applyMove(Move const & move) {
+    grid.set(move.pos, move.getTile());
 }
