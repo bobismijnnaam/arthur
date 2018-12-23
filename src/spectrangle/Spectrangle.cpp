@@ -21,6 +21,13 @@ Spectrangle::Spectrangle() {
  * Given a move, checks if the move is possible.
  */
 bool Spectrangle::isMovePossible(Move const & move) {
+    if (!grid.isPosValid(move.pos)) {
+        return false;
+    }
+
+    if (grid.get(move.pos).has_value()) {
+        return false;
+    }
 
     Color color0 = move.getSide(0);
     Color color1 = move.getSide(1);
@@ -38,11 +45,11 @@ bool Spectrangle::isMovePossible(Move const & move) {
         && (otherColor1 == Color::NONE
             || otherColor1 == Color::WHITE
             || color1 == Color::WHITE
-            || otherColor1 == color0)
+            || otherColor1 == color1)
         && (otherColor2 == Color::NONE 
             || otherColor2 == Color::WHITE
             || color2 == Color::WHITE
-            || otherColor2 == color0)
+            || otherColor2 == color2)
         ;
 }
 
