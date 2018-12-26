@@ -1,6 +1,7 @@
 #include <array>
 #include <iostream>
 #include <gtest/gtest.h>
+#include <set>
 
 #include "Spectrangle.h"
 
@@ -21,12 +22,27 @@ namespace testing
 #define PRINTF(...)  do { testing::internal::ColoredPrintf(testing::internal::COLOR_GREEN, "[          ] "); testing::internal::ColoredPrintf(testing::internal::COLOR_YELLOW, __VA_ARGS__); } while(0)
 
 int const NUMS = 20;
-int const NUM_RUNS = 10'000'00;
+int const NUM_RUNS = 10'000;
 
 TEST(Spectrangle, randomMove) {
+    Spectrangle game;
+    Random random;
+    game.giveTileToPlayer(0, {Color::RED, Color::GREEN, Color::BLUE});
+
+    game.applyMove({{0, 0}, {Color::RED, Color::RED, Color::RED}, 0});
+    game.applyMove({{0, SPECTRANGLE_BOARD_SIDE - 1}, {Color::GREEN, Color::GREEN, Color::GREEN}, 0});
+    game.applyMove({{SPECTRANGLE_BOARD_SIDE - 1, SPECTRANGLE_BOARD_SIDE - 1}, {Color::BLUE, Color::BLUE, Color::BLUE}, 0});
+
+    std::set<Move> generatedMoves;
+
     for (int i = 0; i < NUM_RUNS; i++) {
-        // TODO: Hier verder
-        adiwajdoiw  aojdow
+        std::optional<Move> move = pickRandomMove(game, 0, random);
+        EXPECT_TRUE(move.has_value());
+        if (move.has_value()) {
+            generatedMoves.insert(*move);
+        }
     }
+
+    EXPECT_EQ(generatedMoves.size(), 3);
 }
 

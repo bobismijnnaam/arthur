@@ -28,8 +28,6 @@ struct Tile {
     std::array<Color, 3> sides;
 } ;
 
-bool operator==(Tile const & a, Tile const & b);
-
 struct Move {
     Move() = default;
     Move(Vec2i pos, Tile tile, Rotation rotation);
@@ -41,5 +39,8 @@ struct Move {
     Tile tile;
     Rotation rotation;
 } ;
+
+bool operator==(Tile const & a, Tile const & b);
+bool operator==(Move const & a, Move const & b);
 
 #endif // MOVE_H

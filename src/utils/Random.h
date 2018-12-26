@@ -1,3 +1,6 @@
+#ifndef RANDOM_H
+#define RANDOM_H
+
 #include <cstdint>
 
 class Random {
@@ -12,3 +15,4 @@ public:
     int64_t range(int64_t min, int64_t max);
 } ;
 
+#endif // RANDOM_H
