@@ -102,6 +102,38 @@ int main(int, char**)
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
+    
+    // Create custom texture
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    GLuint FramebufferName = 0;
+    GLuint lastFrameBufferName;
+    glGetIntegerv(GL_FRAMEBUFFER, (GLint*) &lastFrameBufferName);
+    glGenFramebuffers(1, &FramebufferName);
+    glBindFramebuffer(GL_FRAMEBUFFER, FramebufferName);
+
+    // The texture we're going to render to
+    GLuint renderedTexture;
+    GLint last_texture;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+    glGenTextures(1, &renderedTexture);
+
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, renderedTexture);
+
+    // Give an empty image to OpenGL ( the last "0" )
+    int imageW = 100;
+    int imageH = 100;
+    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, imageW, imageH, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // Restore state
+    glBindTexture(GL_TEXTURE_2D, last_texture);
+    glBindFramebuffer(GL_FRAMEBUFFER, lastFrameBufferName);
+
+    // Main starts here
 
     bool show_demo_window = true;
     bool show_another_window = false;
@@ -143,6 +175,9 @@ int main(int, char**)
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+
+            ImGui::Image((ImTextureID)(intptr_t)renderedTexture, ImVec2(imageW, imageH), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &show_another_window);
 
