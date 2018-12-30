@@ -23,15 +23,19 @@ namespace testing
 
 int const NUMS = 20;
 int const NUM_RUNS = 10'000;
+// int const NUM_RUNS = 5;
 
 TEST(Spectrangle, randomMove) {
     Spectrangle game;
     Random random;
     game.giveTileToPlayer(0, {Color::RED, Color::GREEN, Color::BLUE});
 
+    int maxY = SPECTRANGLE_BOARD_SIDE - 1;
+    int maxX = TriangleGrid<int, SPECTRANGLE_BOARD_SIDE>::rowLength(maxY) - 1;
+
     game.applyMove({{0, 0}, {Color::RED, Color::RED, Color::RED}, 0});
-    game.applyMove({{0, SPECTRANGLE_BOARD_SIDE - 1}, {Color::GREEN, Color::GREEN, Color::GREEN}, 0});
-    game.applyMove({{SPECTRANGLE_BOARD_SIDE - 1, SPECTRANGLE_BOARD_SIDE - 1}, {Color::BLUE, Color::BLUE, Color::BLUE}, 0});
+    game.applyMove({{0, maxY}, {Color::GREEN, Color::GREEN, Color::GREEN}, 0});
+    game.applyMove({{maxX, maxY}, {Color::BLUE, Color::BLUE, Color::BLUE}, 0});
 
     std::set<Move> generatedMoves;
 

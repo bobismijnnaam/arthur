@@ -1,3 +1,4 @@
+#include <iostream>
 #include <array>
 #include <optional>
 
@@ -50,6 +51,10 @@ bool Spectrangle::isMovePossible(Move const & move) const {
             || otherColor2 == Color::WHITE
             || color2 == Color::WHITE
             || otherColor2 == color2)
+        && ( otherColor0 != Color::NONE
+             || otherColor1 != Color::NONE
+             || otherColor2 != Color::NONE
+           )
         ;
 }
 
@@ -169,7 +174,7 @@ std::optional<Move> pickRandomMove(Spectrangle const & game, int player, Random 
         int maxNumRotations = tile.isSymmetrical() ? 1 : 3;
         for (Rotation rot = 0; rot < maxNumRotations; rot++) {
             for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; y++) {
-                int rowLength = (2 * y + 1);
+                int rowLength = TriangleGrid<bool, SPECTRANGLE_BOARD_SIDE>::rowLength(y);
                 for (int x = 0; x < rowLength; x++) {
                     Move candidateMove({x, y}, tile, rot);
                     if (game.isMovePossible(candidateMove)) {

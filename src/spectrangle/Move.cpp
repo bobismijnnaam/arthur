@@ -1,3 +1,5 @@
+#include <tuple>
+
 #include "Move.h"
 
 Tile::Tile(Color side1, Color side2, Color side3) : sides{{side1, side2, side3}} {}
@@ -24,10 +26,14 @@ bool operator==(Tile const & a, Tile const & b) {
     return a.sides == b.sides;
 }
 
+bool operator<(Tile const & a, Tile const & b) {
+    return std::tie(a.sides[0], a.sides[1], a.sides[2]) < std::tie(b.sides[0], b.sides[1], b.sides[2]);
+}
+
 bool operator==(Move const & a, Move const & b) {
     return a.pos == b.pos && a.tile == b.tile && a.rotation == b.rotation;
 }
 
-int operator<(Move const & a, Move const & b) {
-    return std::tuple(a.pos, a.tile, a.rotation) < std::tuple(b.pos, b.tile, b.rotbtion);
+bool operator<(Move const & a, Move const & b) {
+    return std::tie(a.pos, a.tile, a.rotation) < std::tie(b.pos, b.tile, b.rotation);
 } 

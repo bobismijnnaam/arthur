@@ -26,6 +26,10 @@ public:
             && (pos.y < SIDE) && (pos.x < (rowEnd - rowStart));
     }
 
+    static int rowLength(int y) {
+        return (y + 1) * (y + 1) - y * y;
+    }
+
     T& get(Vec2i const pos) {
         assert(isPosValid(pos));
 

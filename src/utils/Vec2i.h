@@ -13,4 +13,6 @@ struct Vec2i {
     int x, y;
 } ;
 
+bool operator<(Vec2i const & a, Vec2i const & b);
+
 #endif // VEC2I_H

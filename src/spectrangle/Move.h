@@ -41,6 +41,8 @@ struct Move {
 } ;
 
 bool operator==(Tile const & a, Tile const & b);
+bool operator<(Tile const & a, Tile const & b);
 bool operator==(Move const & a, Move const & b);
+bool operator<(Move const & a, Move const & b);
 
 #endif // MOVE_H
