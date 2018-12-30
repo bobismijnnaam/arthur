@@ -23,7 +23,6 @@ namespace testing
 
 int const NUMS = 20;
 int const NUM_RUNS = 10'000;
-// int const NUM_RUNS = 5;
 
 TEST(Spectrangle, randomMove) {
     Spectrangle game;
