@@ -10,6 +10,7 @@
 #include <SDL.h>
 #include <string>
 #include <vector>
+#include <iostream>
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header file and requires individual function pointers to be loaded manually. 
 // Helper libraries are often used for this purpose! Here we are supporting a few common ones: gl3w, glew, glad.
@@ -24,7 +25,7 @@
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
 
-GLuint LoadShadersFromString(std::string vertex_shader, std::string fragment_shader){
+GLuint loadShadersFromString(std::string vertex_shader, std::string fragment_shader){
 
 	// Create the shaders
 	GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -45,7 +46,7 @@ GLuint LoadShadersFromString(std::string vertex_shader, std::string fragment_sha
 	// }
 
 	// Read the Fragment Shader code from the file
-	std::string FragmentShaderCode = fragment_shader;;
+	std::string FragmentShaderCode = fragment_shader;
 	// std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
 	// if(FragmentShaderStream.is_open()){
 		// std::stringstream sstr;
@@ -208,15 +209,13 @@ void main(){
 
     std::string fragmentShader = R"(
 #version 330 core
-out vec3 color;
+out vec4 color;
 void main(){
-    color = vec3(1,0,0);
+    color = vec4(1,0,0,1);
 }
         )";
 
-    GLuint programID = LoadShadersFromString(vertexShader, fragmentShader);
-
-    glUseProgram(programID);
+    GLuint programID = loadShadersFromString(vertexShader, fragmentShader);
 
     // Create custom texture
     // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
@@ -235,21 +234,42 @@ void main(){
     glBindTexture(GL_TEXTURE_2D, renderedTexture);
 
     // Give an empty image to OpenGL ( the last "0" )
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageW, imageH, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imageW, imageH, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 
     // Poor filtering. Needed !
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+    // The depth buffer
+    GLuint depthrenderbuffer;
+    glGenRenderbuffers(1, &depthrenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, imageW, imageH);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTexture, 0);
+
+    // Set the list of draw buffers.
+    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+    // Always check that our framebuffer is ok
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "SOMEHTING WENT WRONG!\n";
+        std::cout << glCheckFramebufferStatus(GL_FRAMEBUFFER) << "\n";
+    }
+
+    // Draw triangle
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
     // An array of 3 vectors which represents 3 vertices
     static const GLfloat g_vertex_buffer_data[] = {
-       -1.0f, -1.0f, 0.0f,
-       1.0f, -1.0f, 0.0f,
-       0.0f,  1.0f, 0.0f,
+       -1.0, -1.0, 0.0,
+       1.0, -1.0, 0.0,
+       0.0,  1.0, 0.0,
     };
 
     // This will identify our vertex buffer
@@ -274,6 +294,7 @@ void main(){
     );
 
     // Draw the triangle !
+    glUseProgram(programID);
     glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
     glDisableVertexAttribArray(0);
 
@@ -323,7 +344,7 @@ void main(){
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
-            ImGui::Image((ImTextureID)(intptr_t)renderedTexture, ImVec2(imageW, imageH), ImVec2(0,0), ImVec2(1,1), ImColor(255,255,255,255), ImColor(255,255,255,128));
+            ImGui::Image((ImTextureID)(intptr_t)renderedTexture, ImVec2(100, 100), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &show_another_window);
