@@ -118,6 +118,9 @@ private:
     GLuint frameBuffer;
 
     GLuint programID;
+
+    GLuint VertexArrayID;
+    GLuint vertexbuffer;
 } ;
 
 SpectrangleTexture::SpectrangleTexture(int w, int h, SDL_Window* window) : w{w}, h{h} {
@@ -182,27 +185,25 @@ void main(){
         std::cout << "SOMEHTING WENT WRONG!\n";
         std::cout << "Code: " << glCheckFramebufferStatus(GL_FRAMEBUFFER) << "\n";
     }
+
+    // Allocate some other buffers needed for drawing
+    glGenVertexArrays(1, &VertexArrayID);
+    glGenBuffers(1, &vertexbuffer);
 }
+
+// An array of 3 vectors which represents 3 vertices
+static const GLfloat g_vertex_buffer_data[] = {
+   -1.0, -1.0, 0.0,
+   1.0, -1.0, 0.0,
+   0.0,  1.0, 0.0,
+};
 
 void SpectrangleTexture::updateState(TileBoard const & board) {
     SDL_GL_MakeCurrent(window, context);
 
     // Draw triangle
-    GLuint VertexArrayID;
-    glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
-    // An array of 3 vectors which represents 3 vertices
-    static const GLfloat g_vertex_buffer_data[] = {
-       -1.0, -1.0, 0.0,
-       1.0, -1.0, 0.0,
-       0.0,  1.0, 0.0,
-    };
-
-    // This will identify our vertex buffer
-    GLuint vertexbuffer;
-    // Generate 1 buffer, put the resulting identifier in vertexbuffer
-    glGenBuffers(1, &vertexbuffer);
     // The following commands will talk about our 'vertexbuffer' buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     // Give our vertices to OpenGL.
@@ -349,7 +350,6 @@ int main(int, char**)
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
-            // ImGui::Image((ImTextureID)(intptr_t)renderedTexture, ImVec2(100, 100), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
             ImGui::Image(spectrangleTexture.getTexture(), ImVec2(100, 100), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
