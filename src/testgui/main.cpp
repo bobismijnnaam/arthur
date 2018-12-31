@@ -108,6 +108,8 @@ public:
     ImVec2 getSize();
 
 private:
+    void renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color);
+
     SDL_Window* window;
     SDL_GLContext context;
 
@@ -119,8 +121,9 @@ private:
 
     GLuint programID;
 
-    GLuint VertexArrayID;
+    GLuint vertexArrayID;
     GLuint vertexbuffer;
+    GLuint colorBuffer;
 } ;
 
 SpectrangleTexture::SpectrangleTexture(int w, int h, SDL_Window* window) : w{w}, h{h} {
@@ -131,17 +134,27 @@ SpectrangleTexture::SpectrangleTexture(int w, int h, SDL_Window* window) : w{w},
     std::string vertexShader = R"(
 #version 330 core
 layout(location = 0) in vec3 vertexPosition_modelspace;
+// Notice that the "1" here equals the "1" in glVertexAttribPointer
+layout(location = 1) in vec3 vertexColor;
+
+out vec3 fragmentColor;
+
 void main(){
     gl_Position.xyz = vertexPosition_modelspace;
     gl_Position.w = 1.0;
+
+    fragmentColor = vertexColor;
 }
         )";
 
     std::string fragmentShader = R"(
 #version 330 core
+// Interpolated values from the vertex shaders
+in vec3 fragmentColor;
 out vec4 color;
 void main(){
-    color = vec4(1,0,0,1);
+    color.xyz = fragmentColor;
+    color.w = 1;
 }
         )";
 
@@ -187,27 +200,53 @@ void main(){
     }
 
     // Allocate some other buffers needed for drawing
-    glGenVertexArrays(1, &VertexArrayID);
+    glGenVertexArrays(1, &vertexArrayID);
     glGenBuffers(1, &vertexbuffer);
+    glGenBuffers(1, &colorBuffer);
 }
 
-// An array of 3 vectors which represents 3 vertices
-static const GLfloat g_vertex_buffer_data[] = {
-   -1.0, -1.0, 0.0,
-   1.0, -1.0, 0.0,
-   0.0,  1.0, 0.0,
-};
+std::array<GLfloat, 3> red = {1, 0, 0};
+std::array<GLfloat, 3> green = {0, 1, 0};
+
+
 
 void SpectrangleTexture::updateState(TileBoard const & board) {
+    renderTriangle({
+       -1.0, -1.0, 0.0,
+       1.0, -1.0, 0.0,
+       0.0,  1.0, 0.0,
+    }, red);
+
+    renderTriangle({
+       -1.0, 1.0, 0.0,
+       1.0, 1.0, 0.0,
+       0.0,  -1.0, 0.0,
+    }, green);
+
+
+}
+
+void SpectrangleTexture::renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color) {
+    GLfloat g_color_buffer_data[] = {
+        color[0], color[1], color[2],
+        color[0], color[1], color[2],
+        color[0], color[1], color[2]
+    };
+
     SDL_GL_MakeCurrent(window, context);
 
     // Draw triangle
-    glBindVertexArray(VertexArrayID);
+    glBindVertexArray(vertexArrayID);
 
     // The following commands will talk about our 'vertexbuffer' buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
     // Give our vertices to OpenGL.
-    glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    // glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points.data(), GL_STATIC_DRAW);
+
+    // Give our color data to OpenGL
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(g_color_buffer_data), g_color_buffer_data, GL_STATIC_DRAW);
 
     // 1st attribute buffer : vertices
     glEnableVertexAttribArray(0);
@@ -221,10 +260,23 @@ void SpectrangleTexture::updateState(TileBoard const & board) {
        (void*)0            // array buffer offset
     );
 
+    // 2nd attribute buffer : colors
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    glVertexAttribPointer(
+        1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+        3,                                // size
+        GL_FLOAT,                         // type
+        GL_FALSE,                         // normalized?
+        0,                                // stride
+        (void*)0                          // array buffer offset
+    );
+
     // Draw the triangle !
     glUseProgram(programID);
     glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 }
 
 ImTextureID SpectrangleTexture::getTexture() {
