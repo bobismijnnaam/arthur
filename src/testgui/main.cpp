@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 // About OpenGL function loaders: modern OpenGL doesn't have a standard header file and requires individual function pointers to be loaded manually. 
 // Helper libraries are often used for this purpose! Here we are supporting a few common ones: gl3w, glew, glad.
@@ -24,6 +25,9 @@
 #else
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
+
+#include "Vec2i.h"
+#include "Vec2f.h"
 
 GLuint loadShadersFromString(std::string vertex_shader, std::string fragment_shader){
 
@@ -105,7 +109,7 @@ public:
     void updateState(TileBoard const & board);
 
     ImTextureID getTexture();
-    ImVec2 getSize();
+    Vec2i getSize();
 
 private:
     void renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color);
@@ -208,7 +212,18 @@ void main(){
 std::array<GLfloat, 3> red = {1, 0, 0};
 std::array<GLfloat, 3> green = {0, 1, 0};
 
+float constexpr sqrt_3 = std::sqrt(3);
 
+// Origin is the position of the middle of the bottom side of the (0, 0) triangle
+Vec2f calculateTriangleGridPos(int numRows, float cellSide, Vec2f origin, Vec2i cell) {
+    float height = 1/2 * sqrt_3 * cellSide;
+    Vec2f pos;
+    pos.y = -cell.y * cellSide;
+
+    pos.x = cell.x * cellSide;
+
+    return origin + pos;
+}
 
 void SpectrangleTexture::updateState(TileBoard const & board) {
     renderTriangle({
