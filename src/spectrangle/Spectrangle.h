@@ -1,6 +1,8 @@
 #ifndef SPECTRANGLE_H
 #define SPECTRANGLE_H
 
+#include <optional>
+
 #include "TriangleGrid.h"
 #include "Move.h"
 

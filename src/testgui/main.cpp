@@ -28,6 +28,7 @@
 
 #include "Vec2i.h"
 #include "Vec2f.h"
+#include "Spectrangle.h"
 
 GLuint loadShadersFromString(std::string vertex_shader, std::string fragment_shader){
 
@@ -112,6 +113,7 @@ public:
     Vec2i getSize();
 
 private:
+    void renderTile(Vec2i cell, Tile tile);
     void renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color);
 
     SDL_Window* window;
@@ -213,32 +215,119 @@ std::array<GLfloat, 3> red = {1, 0, 0};
 std::array<GLfloat, 3> green = {0, 1, 0};
 
 float constexpr sqrt_3 = std::sqrt(3);
+constexpr float equilateralTriangleHeight(float side) {
+    return 0.5 * sqrt_3 * side;
+}
 
 // Origin is the position of the middle of the bottom side of the (0, 0) triangle
-Vec2f calculateTriangleGridPos(int numRows, float cellSide, Vec2f origin, Vec2i cell) {
-    float height = 1/2 * sqrt_3 * cellSide;
+Vec2f calculateTriangleGridPos(float cellSide, Vec2f origin, Vec2i cell) {
     Vec2f pos;
-    pos.y = -cell.y * cellSide;
+    pos.y = -cell.y * equilateralTriangleHeight(cellSide);
 
-    pos.x = cell.x * cellSide;
+    pos.x = cell.x * (cellSide * 0.5) - cell.y * (cellSide * 0.5);
 
     return origin + pos;
 }
 
 void SpectrangleTexture::updateState(TileBoard const & board) {
+    if (SDL_GL_GetCurrentContext() != context) {
+        SDL_GL_MakeCurrent(window, context);
+    }
+
+    float side = 0.18;
+    float height = equilateralTriangleHeight(side);
+    Vec2f origin {0, 0.85f - height};
+
+    for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
+        for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+            Vec2f pos = calculateTriangleGridPos(side, origin, {x, y});
+
+            bool isUpTriangle = x % 2 == 0;
+            // if (isUpTriangle) {
+                // // renderTriangle({
+                        // // pos.x - 0.5f * side, pos.y, 0,
+                        // // pos.x + 0.5f * side, pos.y, 0,
+                        // // pos.x, pos.y + height, 0
+                        // // }, red);
+                // renderTile({x, y}, {Color::RED, Color::GREEN, Color::BLUE}, isUpTriangle);
+            // } else {
+                // renderTriangle({
+                        // pos.x - 0.5f * side, pos.y + height, 0,
+                        // pos.x + 0.5f * side, pos.y + height, 0,
+                        // pos.x, pos.y, 0
+                        // }, green);
+            // }
+            
+            renderTile({x, y}, {Color::RED, Color::GREEN, Color::BLUE});
+        }
+    }
+}
+
+int msbIndex(int v) {
+    if (v == 0) return -1;
+
+    unsigned r = 0;
+
+    while (v >>= 1) {
+        r++;
+    }
+
+    return r;
+}
+
+std::array<std::array<GLfloat, 3>, 6> tileColorToGLColor {{
+    {1, 0, 0},
+    {0, 0, 1},
+    {0, 1, 0},
+    {1, 1, 0},
+    {0.5, 0, 0.5},
+    {1, 1, 1}
+}};
+
+void SpectrangleTexture::renderTile(Vec2i cell, Tile tile) {
+    float side = 0.18;
+    float height = equilateralTriangleHeight(side);
+    Vec2f origin {0, 0.85f - height};
+
+    Vec2f base = calculateTriangleGridPos(side, origin, cell);
+    Vec2f verticalPoint;
+    Vec2f leftPoint;
+    Vec2f rightPoint;
+
+    bool isUpTile = cell.x % 2 == 0;
+    if (isUpTile) {
+        verticalPoint = base + Vec2f(0, height);
+        leftPoint = base + Vec2f(-side / 2, 0);
+        rightPoint = base + Vec2f(side / 2, 0);
+    } else {
+        verticalPoint = base;
+        leftPoint = base + Vec2f(-side / 2, height);
+        rightPoint = base + Vec2f(side / 2, height);
+    }
+
+    Vec2f centerPoint(base.x, (verticalPoint.y + leftPoint.y + rightPoint.y) / 3.0);
+    
+    // Right side
+    int colorIndex = msbIndex((int) tile.sides[0]);
     renderTriangle({
-       -1.0, -1.0, 0.0,
-       1.0, -1.0, 0.0,
-       0.0,  1.0, 0.0,
-    }, red);
+            centerPoint.x, centerPoint.y, 0,
+            verticalPoint.x, verticalPoint.y, 0,
+            rightPoint.x, rightPoint.y, 0
+    }, tileColorToGLColor[colorIndex]);
 
+    colorIndex = msbIndex((int) tile.sides[1]);
     renderTriangle({
-       -1.0, 1.0, 0.0,
-       1.0, 1.0, 0.0,
-       0.0,  -1.0, 0.0,
-    }, green);
+        leftPoint.x, leftPoint.y, 0,
+        rightPoint.x, rightPoint.y, 0,
+        centerPoint.x, centerPoint.y, 0
+    }, tileColorToGLColor[colorIndex]);
 
-
+    colorIndex = msbIndex((int) tile.sides[2]);
+    renderTriangle({
+        leftPoint.x, leftPoint.y, 0,
+        verticalPoint.x, verticalPoint.y, 0,
+        centerPoint.x, centerPoint.y, 0
+    }, tileColorToGLColor[colorIndex]);
 }
 
 void SpectrangleTexture::renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color) {
@@ -247,8 +336,6 @@ void SpectrangleTexture::renderTriangle(std::array<GLfloat, 9> points, std::arra
         color[0], color[1], color[2],
         color[0], color[1], color[2]
     };
-
-    SDL_GL_MakeCurrent(window, context);
 
     // Draw triangle
     glBindVertexArray(vertexArrayID);
@@ -298,8 +385,8 @@ ImTextureID SpectrangleTexture::getTexture() {
     return (ImTextureID)(intptr_t)texID;
 }
 
-ImVec2 SpectrangleTexture::getSize() {
-    return ImVec2(w, h);
+Vec2i SpectrangleTexture::getSize() {
+    return {w, h};
 }
 
 int main(int, char**)
@@ -417,7 +504,7 @@ int main(int, char**)
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 
-            ImGui::Image(spectrangleTexture.getTexture(), ImVec2(100, 100), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
+            ImGui::Image(spectrangleTexture.getTexture(), ImVec2(500, 500), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
             ImGui::Checkbox("Another Window", &show_another_window);

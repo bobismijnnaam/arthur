@@ -8,12 +8,12 @@
 
 enum class Color : uint8_t {
     NONE = 0,
-    RED = 1,
-    BLUE = 2,
-    GREEN = 4,
-    YELOW = 8,
-    PURPLE = 16,
-    WHITE = 32
+    RED = 1,        // 0
+    BLUE = 2,       // 1
+    GREEN = 4,      // 2
+    YELLOW = 8,      // 3
+    PURPLE = 16,    // 4
+    WHITE = 32      // 5
 } ;
 
 using Rotation = uint8_t;
