@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(arthur)
 
+# For YCM
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_CXX_COMPILER "g++-7")
 set(CMAKE_C_COMPILER "gcc-7")
 
