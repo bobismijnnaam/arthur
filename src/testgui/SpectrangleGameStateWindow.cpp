@@ -25,7 +25,7 @@ void SpectrangleGameStateWindow::updateState(TileBoard const & board, PlayersSta
     spectrangleTexture.updateState(board);
 
     for (int player = 0; player < MAX_NUM_PLAYERS; player++) {
-        PlayerBag const & bag = playerBags[0];
+        PlayerBag const & bag = playerBags[player];
         for (int tileIndex = 0; tileIndex < bag.getSize(); tileIndex++) {
             tileTextures[player][tileIndex].updateState(bag[tileIndex]);
         }
@@ -40,20 +40,18 @@ void SpectrangleGameStateWindow::render() {
 
     if (hadFirstRender) {
         ImGui::Image(spectrangleTexture.getTexture(), ImVec2(windowSize.x - framePadding.x * 2, windowSize.x - framePadding.x * 2), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
-        // ImGui::Image(spectrangleTexture.getTexture(), ImVec2(100, 100), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
-        for (int y = 0; y < MAX_NUM_PLAYERS; y++) {
-            for (int x = 0; x < MAX_TILES_PER_PLAYER; x++) {
-                if (x > 0) {
-                    ImGui::SameLine();
-                }       
+        for (int player = 0; player < MAX_NUM_PLAYERS; player++) {
+            ImGui::Text("Player %d:", player);
+            for (int tileIndex = 0; tileIndex < MAX_TILES_PER_PLAYER; tileIndex++) {
+                ImGui::SameLine();
 
-                ImGui::Button("Click");
+                TileTexture& tile = tileTextures[player][tileIndex];
+
+                ImGui::ImageButton(tile.getTexture(), ImVec2(30,30), ImVec2(0,1), ImVec2(1, 0), 1, ImColor(0,0,0,255));
             }
         }
     }
-
-    // ImGui::ImageButton(tile1.getTexture(), ImVec2(30,30), ImVec2(0,1), ImVec2(1, 0), 1, ImColor(0,0,0,255));
 
     ImGui::End();
 }

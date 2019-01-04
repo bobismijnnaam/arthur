@@ -98,12 +98,18 @@ int main(int, char**)
 
     SpectrangleGameStateWindow gameStateWindow("Spectrangle Game State Window", window, scratchContext);
     PlayersState playerBags;
+    playerBags[0].push({Color::RED, Color::RED, Color::RED});
+    playerBags[1].push({Color::RED, Color::GREEN, Color::BLUE});
+    playerBags[1].push({Color::RED, Color::GREEN, Color::BLUE});
+    playerBags[2].push({Color::RED, Color::GREEN, Color::GREEN});
+    playerBags[2].push({Color::RED, Color::BLUE, Color::BLUE});
+    playerBags[2].push({Color::PURPLE, Color::GREEN, Color::RED});
     gameStateWindow.updateState(board, playerBags);
 
     // Main starts here
     bool show_demo_window = false;
 
-    ImVec4 clear_color = ImVec4(0, 0, 0, 1.00f);
+    ImVec4 clear_color = ImVec4(0.3, 0.3, 0.3, 1.00f);
 
     // Main loop
     bool done = false;
@@ -135,14 +141,7 @@ int main(int, char**)
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            ImGui::Begin("Spectrangle game state");                          
-
-            ImVec2 windowSize = ImGui::GetWindowSize();
-            ImVec2 framePadding(10, 10);
-
-            ImGui::Image(spectrangleTexture.getTexture(), ImVec2(windowSize.x - framePadding.x * 2, windowSize.x - framePadding.x * 2), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
-
-            ImGui::ImageButton(tile1.getTexture(), ImVec2(30,30), ImVec2(0,1), ImVec2(1, 0), 1, ImColor(0,0,0,255));
+            ImGui::Begin("Demo window appendix");                          
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
