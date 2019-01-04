@@ -30,6 +30,13 @@
 #include "Vec2f.h"
 #include "Spectrangle.h"
 
+void setContextIfNeeded(SDL_Window* window, SDL_GLContext context) {
+    SDL_GLContext current = SDL_GL_GetCurrentContext();
+    if (current != context) {
+        SDL_GL_MakeCurrent(window, context);
+    }
+}
+
 GLuint loadShadersFromString(std::string vertex_shader, std::string fragment_shader){
 
 	// Create the shaders
@@ -100,120 +107,14 @@ GLuint loadShadersFromString(std::string vertex_shader, std::string fragment_sha
 	return ProgramID;
 }
 
-#include <optional>
-#include "Spectrangle.h"
-
-class SpectrangleTexture {
-public:
-    SpectrangleTexture(int w, int h, float cellSide, SDL_Window* window);
-
-    void updateState(TileBoard const & board);
-
-    ImTextureID getTexture();
-    Vec2i getSize();
-
-private:
-    void renderTile(Vec2i cell, Tile tile);
-    void renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color);
-
-    SDL_Window* window;
-    SDL_GLContext context;
-
-    int w;
-    int h;
-    float cellSide;
-    GLuint texID;
-
-    GLuint frameBuffer;
-
-    GLuint programID;
-
-    GLuint vertexArrayID;
-    GLuint vertexbuffer;
-    GLuint colorBuffer;
-} ;
-
-SpectrangleTexture::SpectrangleTexture(int w, int h, float cellSide, SDL_Window* window) : w{w}, h{h}, cellSide{cellSide}, window{window} {
-    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-    context = SDL_GL_CreateContext(window);
-    SDL_GL_MakeCurrent(window, context);
-
-    std::string vertexShader = R"(
-#version 330 core
-layout(location = 0) in vec3 vertexPosition_modelspace;
-// Notice that the "1" here equals the "1" in glVertexAttribPointer
-layout(location = 1) in vec3 vertexColor;
-
-out vec3 fragmentColor;
-
-void main(){
-    gl_Position.xyz = vertexPosition_modelspace;
-    gl_Position.w = 1.0;
-
-    fragmentColor = vertexColor;
-}
-        )";
-
-    std::string fragmentShader = R"(
-#version 330 core
-// Interpolated values from the vertex shaders
-in vec3 fragmentColor;
-out vec4 color;
-void main(){
-    color.xyz = fragmentColor;
-    color.w = 1;
-}
-        )";
-
-    programID = loadShadersFromString(vertexShader, fragmentShader);
-
-    // Create custom texture
-    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
-    glGenFramebuffers(1, &frameBuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
-    glViewport(0, 0, w, h); 
-
-    // The texture we're going to render to
-    glGenTextures(1, &texID);
-
-    // "Bind" the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, texID);
-
-    // Give an empty image to OpenGL ( the last "0" )
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
-    // Poor filtering. Needed !
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    // The depth buffer
-    GLuint depthrenderbuffer;
-    glGenRenderbuffers(1, &depthrenderbuffer);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthrenderbuffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthrenderbuffer);
-
-    // Set "renderedTexture" as our colour attachement #0
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, 0);
-
-    // Set the list of draw buffers.
-    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
-
-    // Always check that our framebuffer is ok
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cout << "SOMEHTING WENT WRONG!\n";
-        std::cout << "Code: " << glCheckFramebufferStatus(GL_FRAMEBUFFER) << "\n";
-    }
-
-    // Allocate some other buffers needed for drawing
-    glGenVertexArrays(1, &vertexArrayID);
-    glGenBuffers(1, &vertexbuffer);
-    glGenBuffers(1, &colorBuffer);
-}
-
-std::array<GLfloat, 3> red = {1, 0, 0};
-std::array<GLfloat, 3> green = {0, 1, 0};
+std::array<std::array<GLfloat, 3>, 6> tileColorToGLColor {{
+    {1, 0, 0},
+    {0, 0, 1},
+    {0, 1, 0},
+    {1, 1, 0},
+    {0.5, 0, 0.5},
+    {1, 1, 1}
+}};
 
 float constexpr sqrt_3 = std::sqrt(3);
 constexpr float equilateralTriangleHeight(float side) {
@@ -230,21 +131,6 @@ Vec2f calculateTriangleGridPos(float cellSide, Vec2f origin, Vec2i cell) {
     return origin + pos;
 }
 
-void SpectrangleTexture::updateState(TileBoard const & board) {
-    if (SDL_GL_GetCurrentContext() != context) {
-        SDL_GL_MakeCurrent(window, context);
-    }
-
-    for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
-        for (int x = 0; x < TileBoard::rowLength(y); ++x) {
-            std::optional<Tile> const & tile = board.get({x, y});
-            if (tile.has_value()) {
-                renderTile({x, y}, *tile);
-            }
-        }
-    }
-}
-
 int msbIndex(int v) {
     if (v == 0) return -1;
 
@@ -257,67 +143,66 @@ int msbIndex(int v) {
     return r;
 }
 
-std::array<std::array<GLfloat, 3>, 6> tileColorToGLColor {{
-    {1, 0, 0},
-    {0, 0, 1},
-    {0, 1, 0},
-    {1, 1, 0},
-    {0.5, 0, 0.5},
-    {1, 1, 1}
-}};
+class TriangleRenderer {
+public:
+    TriangleRenderer(SDL_Window* window, SDL_GLContext context);
+    void renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color);
 
-void SpectrangleTexture::renderTile(Vec2i cell, Tile tile) {
-    float height = equilateralTriangleHeight(cellSide);
-    Vec2f origin {0, 0.85f - height};
+public:
+    SDL_Window* window;
+    SDL_GLContext context;
 
-    Vec2f base = calculateTriangleGridPos(cellSide, origin, cell);
-    Vec2f verticalPoint;
-    Vec2f leftPoint;
-    Vec2f rightPoint;
-
-    bool isUpTile = cell.x % 2 == 0;
-    if (isUpTile) {
-        verticalPoint = base + Vec2f(0, height);
-        leftPoint = base + Vec2f(-cellSide / 2, 0);
-        rightPoint = base + Vec2f(cellSide / 2, 0);
-    } else {
-        verticalPoint = base;
-        leftPoint = base + Vec2f(-cellSide / 2, height);
-        rightPoint = base + Vec2f(cellSide / 2, height);
-    }
-
-    Vec2f centerPoint(base.x, (verticalPoint.y + leftPoint.y + rightPoint.y) / 3.0);
-    
-    // Right side
-    int colorIndex = msbIndex((int) tile.sides[0]);
-    renderTriangle({
-            centerPoint.x, centerPoint.y, 0,
-            verticalPoint.x, verticalPoint.y, 0,
-            rightPoint.x, rightPoint.y, 0
-    }, tileColorToGLColor[colorIndex]);
-
-    // top/bottom side
-    colorIndex = msbIndex((int) tile.sides[1]);
-    renderTriangle({
-        leftPoint.x, leftPoint.y, 0,
-        rightPoint.x, rightPoint.y, 0,
-        centerPoint.x, centerPoint.y, 0
-    }, tileColorToGLColor[colorIndex]);
-
-    // Left side
-    colorIndex = msbIndex((int) tile.sides[2]);
-    renderTriangle({
-        leftPoint.x, leftPoint.y, 0,
-        verticalPoint.x, verticalPoint.y, 0,
-        centerPoint.x, centerPoint.y, 0
-    }, tileColorToGLColor[colorIndex]);
-}
-
-class TileTexture {
-
+    GLuint vertexArrayID;
+    GLuint vertexBuffer;
+    GLuint colorBuffer;
+    GLuint programID;
 } ;
 
-void SpectrangleTexture::renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color) {
+TriangleRenderer::TriangleRenderer(SDL_Window* window, SDL_GLContext context) : window{window}, context{context} {
+    setContextIfNeeded(window, context);
+
+    glGenVertexArrays(1, &vertexArrayID);
+    glGenBuffers(1, &vertexBuffer);
+    glGenBuffers(1, &colorBuffer);
+
+    std::string vertexShader = R"(
+#version 330 core
+// #version 130
+layout(location = 0) in vec3 vertexPosition_modelspace;
+// Notice that the "1" here equals the "1" in glVertexAttribPointer
+layout(location = 1) in vec3 vertexColor;
+
+out vec3 fragmentColor;
+
+void main(){
+    gl_Position.xyz = vertexPosition_modelspace;
+    gl_Position.w = 1.0;
+
+    fragmentColor = vertexColor;
+}
+        )";
+
+    std::string fragmentShader = R"(
+#version 330 core
+// #version 130
+// Interpolated values from the vertex shaders
+in vec3 fragmentColor;
+out vec4 color;
+void main(){
+    color.xyz = fragmentColor;
+    color.w = 1;
+}
+        )";
+
+    programID = loadShadersFromString(vertexShader, fragmentShader);
+}
+
+void TriangleRenderer::renderTriangle(std::array<GLfloat, 9> points, std::array<GLfloat, 3> color) {
+    GLint drawFboId = 0;
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
+
+    setContextIfNeeded(window, context);
+
     GLfloat g_color_buffer_data[] = {
         color[0], color[1], color[2],
         color[0], color[1], color[2],
@@ -328,9 +213,8 @@ void SpectrangleTexture::renderTriangle(std::array<GLfloat, 9> points, std::arra
     glBindVertexArray(vertexArrayID);
 
     // The following commands will talk about our 'vertexbuffer' buffer
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     // Give our vertices to OpenGL.
-    // glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
     glBufferData(GL_ARRAY_BUFFER, sizeof(points), points.data(), GL_STATIC_DRAW);
 
     // Give our color data to OpenGL
@@ -339,7 +223,7 @@ void SpectrangleTexture::renderTriangle(std::array<GLfloat, 9> points, std::arra
 
     // 1st attribute buffer : vertices
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glVertexAttribPointer(
        0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
        3,                  // size
@@ -363,9 +247,151 @@ void SpectrangleTexture::renderTriangle(std::array<GLfloat, 9> points, std::arra
 
     // Draw the triangle !
     glUseProgram(programID);
+
     glDrawArrays(GL_TRIANGLES, 0, 3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
+}
+
+void renderTile(Vec2f origin, Vec2i cell, float cellSide, Tile tile, TriangleRenderer& triangleRenderer) {
+    float height = equilateralTriangleHeight(cellSide);
+
+    Vec2f base = calculateTriangleGridPos(cellSide, origin, cell);
+    Vec2f verticalPoint;
+    Vec2f leftPoint;
+    Vec2f rightPoint;
+
+    bool isUpTile = cell.x % 2 == 0;
+    if (isUpTile) {
+        verticalPoint = base + Vec2f(0, height);
+        leftPoint = base + Vec2f(-cellSide / 2, 0);
+        rightPoint = base + Vec2f(cellSide / 2, 0);
+    } else {
+        verticalPoint = base;
+        leftPoint = base + Vec2f(-cellSide / 2, height);
+        rightPoint = base + Vec2f(cellSide / 2, height);
+    }
+
+    Vec2f centerPoint(base.x, (verticalPoint.y + leftPoint.y + rightPoint.y) / 3.0);
+    
+    // Right side
+    int colorIndex = msbIndex((int) tile.sides[0]);
+    triangleRenderer.renderTriangle({
+            centerPoint.x, centerPoint.y, 0,
+            verticalPoint.x, verticalPoint.y, 0,
+            rightPoint.x, rightPoint.y, 0
+    }, tileColorToGLColor[colorIndex]);
+
+    // top/bottom side
+    colorIndex = msbIndex((int) tile.sides[1]);
+    triangleRenderer.renderTriangle({
+        leftPoint.x, leftPoint.y, 0,
+        rightPoint.x, rightPoint.y, 0,
+        centerPoint.x, centerPoint.y, 0
+    }, tileColorToGLColor[colorIndex]);
+
+    // Left side
+    colorIndex = msbIndex((int) tile.sides[2]);
+    triangleRenderer.renderTriangle({
+        leftPoint.x, leftPoint.y, 0,
+        verticalPoint.x, verticalPoint.y, 0,
+        centerPoint.x, centerPoint.y, 0
+    }, tileColorToGLColor[colorIndex]);
+}
+
+#include <optional>
+#include "Spectrangle.h"
+
+class SpectrangleTexture {
+public:
+    SpectrangleTexture(int w, int h, float cellSide, SDL_Window* window, SDL_GLContext context, TriangleRenderer& triangleRenderer);
+
+    void updateState(TileBoard const & board);
+
+    ImTextureID getTexture();
+    Vec2i getSize();
+
+private:
+    void setTextureAsCurrent();
+
+    TriangleRenderer& triangleRenderer;
+
+    SDL_Window* window;
+    SDL_GLContext context;
+
+    GLuint texID;
+    GLuint frameBuffer;
+
+    int w;
+    int h;
+    float cellSide;
+} ;
+
+SpectrangleTexture::SpectrangleTexture(int w, int h, float cellSide, SDL_Window* window, SDL_GLContext context, TriangleRenderer& triangleRenderer) : w{w}, h{h}, cellSide{cellSide}, window{window}, context{context}, triangleRenderer{triangleRenderer} {
+    setContextIfNeeded(window, context);
+
+    // Create custom texture
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    glGenFramebuffers(1, &frameBuffer);
+    setTextureAsCurrent();
+
+    // The texture we're going to render to
+    glGenTextures(1, &texID);
+
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, texID);
+
+    // Give an empty image to OpenGL ( the last "0" )
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // The depth buffer
+    GLuint depthRenderBuffer;
+    glGenRenderbuffers(1, &depthRenderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, 0);
+
+    // Set the list of draw buffers.
+    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+    // Always check that our framebuffer is ok
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "SOMEHTING WENT WRONG!\n";
+        std::cout << "Code: " << glCheckFramebufferStatus(GL_FRAMEBUFFER) << "\n";
+    }
+}
+
+void SpectrangleTexture::setTextureAsCurrent() {
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+    glViewport(0, 0, w, h); 
+}
+
+std::array<GLfloat, 3> red = {1, 0, 0};
+std::array<GLfloat, 3> green = {0, 1, 0};
+
+void SpectrangleTexture::updateState(TileBoard const & board) {
+    setContextIfNeeded(window, context);
+    setTextureAsCurrent();
+
+    Vec2f origin {0, 0.85f - equilateralTriangleHeight(cellSide)};
+    
+    for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
+        for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+            std::optional<Tile> const & tile = board.get({x, y});
+            if (tile.has_value()) {
+                renderTile(origin, {x, y}, cellSide, *tile, triangleRenderer);
+            }
+        }
+    }
 }
 
 ImTextureID SpectrangleTexture::getTexture() {
@@ -374,6 +400,99 @@ ImTextureID SpectrangleTexture::getTexture() {
 
 Vec2i SpectrangleTexture::getSize() {
     return {w, h};
+}
+
+
+class TileTexture {
+public:
+    TileTexture(int w, int h, SDL_Window* window, SDL_GLContext context, TriangleRenderer& triangleRenderer);
+
+    void updateState(Tile const & tile);
+
+    ImTextureID getTexture();
+    Vec2i getSize();
+
+private:
+    void setTextureAsCurrent();
+    
+    SDL_Window* window;
+    SDL_GLContext context;
+    TriangleRenderer& triangleRenderer;
+
+    GLuint texID;
+    GLuint frameBuffer;
+
+    int w;
+    int h;
+    float cellSide;
+} ;
+
+TileTexture::TileTexture(int w, int h, SDL_Window* window, SDL_GLContext context, TriangleRenderer& triangleRenderer) : window{window}, context{context}, triangleRenderer{triangleRenderer}, w{w}, h{h}, cellSide{cellSide} {
+    setContextIfNeeded(window, context);
+
+    // Create custom texture
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+    glGenFramebuffers(1, &frameBuffer);
+    setTextureAsCurrent();
+
+    // The texture we're going to render to
+    glGenTextures(1, &texID);
+
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, texID);
+
+    // Give an empty image to OpenGL ( the last "0" )
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+
+    // Poor filtering. Needed !
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    // The depth buffer
+    GLuint depthRenderBuffer;
+    glGenRenderbuffers(1, &depthRenderBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, w, h);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBuffer);
+
+    // Set "renderedTexture" as our colour attachement #0
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, 0);
+
+    // Set the list of draw buffers.
+    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
+
+    // Always check that our framebuffer is ok
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cout << "SOMEHTING WENT WRONG!\n";
+        std::cout << "Code: " << glCheckFramebufferStatus(GL_FRAMEBUFFER) << "\n";
+    }
+}
+
+void TileTexture::setTextureAsCurrent() {
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+    glViewport(0, 0, w, h); 
+}
+
+void TileTexture::updateState(Tile const & tile) {
+    setContextIfNeeded(window, context);
+    setTextureAsCurrent();
+
+    renderTile(
+            {0, -0.8},
+            {0, 0},
+            2,
+            tile,
+            triangleRenderer
+            );
+}
+
+ImTextureID TileTexture::getTexture() {
+    return (ImTextureID)(intptr_t)texID;
+}
+
+Vec2i TileTexture::getSize() {
+    return Vec2i(w, h);
 }
 
 int main(int, char**)
@@ -406,6 +525,9 @@ int main(int, char**)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+    SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+
     SDL_DisplayMode current;
     SDL_GetCurrentDisplayMode(0, &current);
     SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
@@ -441,8 +563,15 @@ int main(int, char**)
     // Setup Style
     ImGui::StyleColorsDark();
 
-    SpectrangleTexture spectrangleTexture(500, 500, 0.18, window);
+    SDL_GLContext scratchContext = SDL_GL_CreateContext(window);
+    SDL_GL_MakeCurrent(window, scratchContext);
 
+    TriangleRenderer triangleRenderer(window, scratchContext);
+
+    TileTexture tile1(100, 100, window, scratchContext, triangleRenderer);
+    tile1.updateState({Color::RED, Color::RED, Color::RED});
+    
+    SpectrangleTexture spectrangleTexture(500, 500, 0.18, window, scratchContext, triangleRenderer);
     TileBoard board;
     board.set({0, 0}, {{Color::RED, Color::RED, Color::RED}});
     board.set({0, 1}, {{Color::BLUE, Color::BLUE, Color::PURPLE}});
@@ -450,7 +579,6 @@ int main(int, char**)
     board.set({0, 3}, {{Color::YELLOW, Color::GREEN, Color::YELLOW}});
     board.set({0, 4}, {{Color::PURPLE, Color::PURPLE, Color::PURPLE}});
     board.set({0, 5}, {{Color::WHITE, Color::WHITE, Color::WHITE}});
-
     spectrangleTexture.updateState(board);
 
     // Main starts here
@@ -495,6 +623,8 @@ int main(int, char**)
             ImVec2 framePadding(10, 10);
 
             ImGui::Image(spectrangleTexture.getTexture(), ImVec2(windowSize.x - framePadding.x * 2, windowSize.x - framePadding.x * 2), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
+
+            ImGui::ImageButton(tile1.getTexture(), ImVec2(100,100), ImVec2(0,1), ImVec2(1, 0), 1, ImColor(0,0,0,255));
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
