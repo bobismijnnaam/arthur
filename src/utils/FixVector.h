@@ -17,6 +17,14 @@ public:
         return data.at(index);
     }
 
+    T& operator[](int index) {
+        return data.at(index);
+    }
+
+    T const & operator[](int index) const {
+        return data.at(index);
+    }
+
     void set(int index, T const & elem) {
         data[index] = elem;
     }

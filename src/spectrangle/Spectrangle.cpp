@@ -13,9 +13,10 @@ std::array<Tile, NUM_TOTAL_TILES> const tileBagStarterSet = {{
     {Color::RED, Color::BLUE, Color::GREEN}
 }};
 
-Spectrangle::Spectrangle() {
+Spectrangle::Spectrangle(int numPlayers) {
     tileBag.data = tileBagStarterSet;
     tileBag.size = NUM_TOTAL_TILES;
+    playerBags.size = numPlayers;
 }
 
 /**

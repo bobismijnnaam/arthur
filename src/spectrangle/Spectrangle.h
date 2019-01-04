@@ -14,11 +14,12 @@ int const MAX_NUM_PLAYERS = 4;
 
 using MoveBuffer = FixVector<Move, NUM_MAX_POSSIBLE_MOVES>;
 using PlayerBag = FixVector<Tile, MAX_TILES_PER_PLAYER>;
+using PlayersState = FixVector<PlayerBag, MAX_NUM_PLAYERS>;
 using TileBoard = TriangleGrid<std::optional<Tile>, SPECTRANGLE_BOARD_SIDE>;
 
 class Spectrangle {
 public:
-    Spectrangle();
+    Spectrangle(int numPlayers);
 
     bool isMovePossible(Move const & move) const;
     void applyMove(Move const & move);
@@ -38,7 +39,7 @@ public:
 private:
     TileBoard grid;
     FixVector<Tile, NUM_TOTAL_TILES> tileBag;
-    std::array<PlayerBag, MAX_NUM_PLAYERS> playerBags;
+    PlayersState playerBags;
 
 } ;
 

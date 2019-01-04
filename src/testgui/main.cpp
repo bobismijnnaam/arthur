@@ -1,8 +1,3 @@
-// dear imgui: standalone example application for SDL2 + OpenGL
-// If you are new to dear imgui, see examples/README.txt and documentation at the top of imgui.cpp.
-// (SDL is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan graphics context creation, etc.)
-// (GL3W is a helper library to access OpenGL functions since there is no standard header to access modern OpenGL functions easily. Alternatives are GLEW, Glad, etc.)
-
 #include <stdio.h>
 #include <SDL.h>
 #include <string>
@@ -62,15 +57,7 @@ int main(int, char**)
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
     // Initialize OpenGL loader
-#if defined(IMGUI_IMPL_OPENGL_LOADER_GL3W)
     bool err = gl3wInit() != 0;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLEW)
-    bool err = glewInit() != GLEW_OK;
-#elif defined(IMGUI_IMPL_OPENGL_LOADER_GLAD)
-    bool err = gladLoadGL() == 0;
-#else
-    bool err = false; // If you use IMGUI_IMPL_OPENGL_LOADER_CUSTOM, your loader is likely to requires some form of initialization.
-#endif
     if (err)
     {
         fprintf(stderr, "Failed to initialize OpenGL loader!\n");
