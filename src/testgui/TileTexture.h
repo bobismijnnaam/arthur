@@ -1,3 +1,6 @@
+#ifndef TILETEXTURE_H
+#define TILETEXTURE_H
+
 #include <SDL.h>
 
 #include "imgui.h"
@@ -27,3 +30,5 @@ private:
     int h;
     float cellSide;
 } ;
+
+#endif // TILETEXTURE_H

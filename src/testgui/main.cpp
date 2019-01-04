@@ -11,6 +11,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "Spectrangle.h"
+#include "SpectrangleGameStateWindow.h"
 #include "TileTexture.h"
 #include "TriangleRenderer.h"
 #include "Vec2f.h"
@@ -95,8 +96,12 @@ int main(int, char**)
     board.set({0, 5}, {{Color::WHITE, Color::WHITE, Color::WHITE}});
     spectrangleTexture.updateState(board);
 
+    SpectrangleGameStateWindow gameStateWindow("Spectrangle Game State Window", window, scratchContext);
+    PlayersState playerBags;
+    gameStateWindow.updateState(board, playerBags);
+
     // Main starts here
-    bool show_demo_window = true;
+    bool show_demo_window = false;
 
     ImVec4 clear_color = ImVec4(0, 0, 0, 1.00f);
 
@@ -137,12 +142,14 @@ int main(int, char**)
 
             ImGui::Image(spectrangleTexture.getTexture(), ImVec2(windowSize.x - framePadding.x * 2, windowSize.x - framePadding.x * 2), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
-            ImGui::ImageButton(tile1.getTexture(), ImVec2(100,100), ImVec2(0,1), ImVec2(1, 0), 1, ImColor(0,0,0,255));
+            ImGui::ImageButton(tile1.getTexture(), ImVec2(30,30), ImVec2(0,1), ImVec2(1, 0), 1, ImColor(0,0,0,255));
 
             ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 
             ImGui::End();
         }
+
+        gameStateWindow.render();
 
         // Rendering
         ImGui::Render();

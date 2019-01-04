@@ -21,6 +21,8 @@ class Spectrangle {
 public:
     Spectrangle(int numPlayers);
 
+    void setNumPlayers(int numPlayers);
+
     bool isMovePossible(Move const & move) const;
     void applyMove(Move const & move);
     Color getNeighbourColorAtSide(Vec2i const pos, Side side) const;

@@ -19,6 +19,10 @@ Spectrangle::Spectrangle(int numPlayers) {
     playerBags.size = numPlayers;
 }
 
+void Spectrangle::setNumPlayers(int numPlayers) {
+    playerBags.size = numPlayers;
+}
+
 /**
  * Given a move, checks if the move is possible.
  */

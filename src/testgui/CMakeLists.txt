@@ -6,6 +6,7 @@ add_executable(testgui
     TriangleRenderer.cpp
     SpectrangleTexture.cpp
     TileTexture.cpp
+    SpectrangleGameStateWindow.cpp
     )
 
 target_link_libraries(testgui utils spectrangle ${IMGUI_LIBRARIES})

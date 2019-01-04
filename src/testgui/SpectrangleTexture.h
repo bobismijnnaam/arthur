@@ -1,3 +1,6 @@
+#ifndef SPECTRANGLETEXTURE_H
+#define SPECTRANGLETEXTURE_H
+
 #include <SDL.h>
 
 #include "imgui.h"
@@ -29,3 +32,4 @@ private:
     float cellSide;
 } ;
 
+#endif // SPECTRANGLETEXTURE_H
