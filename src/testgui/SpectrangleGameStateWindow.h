@@ -19,9 +19,6 @@ private:
 
     bool hadFirstRender;
 
-    TileBoard board;
-    PlayersState playerBags;
-
     TriangleRenderer triangleRenderer;
     SpectrangleTexture spectrangleTexture;
     std::array<std::vector<TileTexture>, MAX_NUM_PLAYERS> tileTextures;

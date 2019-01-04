@@ -1,5 +1,6 @@
-#include <SpectrangleGameStateWindow.h>
+#include <iostream>
 
+#include "SpectrangleGameStateWindow.h"
 #include "imgui.h"
 
 SpectrangleGameStateWindow::SpectrangleGameStateWindow(char const * windowTitleArg, SDL_Window* window, SDL_GLContext contextArg) : 
@@ -18,7 +19,7 @@ SpectrangleGameStateWindow::SpectrangleGameStateWindow(char const * windowTitleA
     hadFirstRender = false;
 }
 
-void SpectrangleGameStateWindow::updateState(TileBoard const & boardArg, PlayersState const & playerBags) {
+void SpectrangleGameStateWindow::updateState(TileBoard const & board, PlayersState const & playerBags) {
     hadFirstRender = true;
 
     spectrangleTexture.updateState(board);
@@ -38,8 +39,8 @@ void SpectrangleGameStateWindow::render() {
     ImVec2 framePadding(10, 10);
 
     if (hadFirstRender) {
-        // ImGui::Image(spectrangleTexture.getTexture(), ImVec2(windowSize.x - framePadding.x * 2, windowSize.x - framePadding.x * 2), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
-        ImGui::Image(spectrangleTexture.getTexture(), ImVec2(100, 100), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
+        ImGui::Image(spectrangleTexture.getTexture(), ImVec2(windowSize.x - framePadding.x * 2, windowSize.x - framePadding.x * 2), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
+        // ImGui::Image(spectrangleTexture.getTexture(), ImVec2(100, 100), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
         for (int y = 0; y < MAX_NUM_PLAYERS; y++) {
             for (int x = 0; x < MAX_TILES_PER_PLAYER; x++) {
