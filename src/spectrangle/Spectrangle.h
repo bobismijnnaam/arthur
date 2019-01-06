@@ -51,14 +51,14 @@ private:
     TileBoard grid;
     FixVector<Tile, NUM_TOTAL_TILES> tileBag;
     int numPlayers;
-    bool initialMoveDone;
+    bool isInInitialState;
     PlayersState playerBags;
     std::array<int, MAX_NUM_PLAYERS> scores;
 } ;
 
 #include "Random.h"
 
-void getAllTileMoves(Spectrangle const & game, int player, Random & random, MoveBuffer & buffer);
+void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer);
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random);
 int getMultiplier(Vec2i pos);
 

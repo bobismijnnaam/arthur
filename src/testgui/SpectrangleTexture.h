@@ -18,18 +18,17 @@ public:
 
 private:
     void setTextureAsCurrent();
-
-    TriangleRenderer& triangleRenderer;
-
-    SDL_Window* window;
-    SDL_GLContext context;
-
-    GLuint texID;
-    GLuint frameBuffer;
-
+    
     int w;
     int h;
     float cellSide;
+
+    SDL_Window* window;
+    SDL_GLContext context;
+    TriangleRenderer& triangleRenderer;
+
+    GLuint texID;
+    GLuint frameBuffer;
 } ;
 
 #endif // SPECTRANGLETEXTURE_H

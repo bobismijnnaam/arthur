@@ -71,6 +71,8 @@ Spectrangle::Spectrangle(int numPlayersArg) :
     // Fixvector always initializes size to zero. So we only have to set
     // the size to numPlayers here to have a few empty playerbags available
     playerBags.size = numPlayers;
+
+    isInInitialState = true;
 }
 
 void Spectrangle::setNumPlayers(int numPlayersArg) {
@@ -199,6 +201,7 @@ bool Spectrangle::isBagEmpty() {
 }
 
 void Spectrangle::applyMove(int player, Move const & move) {
+    isInInitialState = false;
     grid.set(move.pos, move.getTile());
     scores[player] += getMultiplier(move.pos) * move.tile.score;
 }
@@ -247,6 +250,10 @@ int Spectrangle::getScore(int player) {
     return scores[player];
 }
 
+bool Spectrangle::isInitialMoveDone() {
+    return !isInInitialState;
+}
+
 std::optional<int> Spectrangle::getWinner() {
     int winner = 0;
     int maxScore = scores[0];
@@ -269,7 +276,32 @@ std::optional<int> Spectrangle::getWinner() {
     }
 }
 
+int Spectrangle::getNumPlayers() {
+    return numPlayers;
+}
+
 #include "Random.h"
+
+void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer) {
+    buffer.clear();
+    int numTiles = game.getPlayerNumTiles(player);
+
+    for (int tileIndex = 0; tileIndex < numTiles; tileIndex++) {
+        Tile tile = game.getTileFromPlayer(player, tileIndex);
+        int maxNumRotations = tile.isSymmetrical() ? 1 : 3;
+        for (Rotation rot = 0; rot < maxNumRotations; rot++) {
+            for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; y++) {
+                int rowLength = TriangleGrid<bool, SPECTRANGLE_BOARD_SIDE>::rowLength(y);
+                for (int x = 0; x < rowLength; x++) {
+                    Move candidateMove({x, y}, tile, rot);
+                    if (game.isMovePossible(candidateMove)) {
+                        buffer.push(candidateMove);
+                    }
+                }
+            }
+        }   
+    }
+}
 
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random) {
 
