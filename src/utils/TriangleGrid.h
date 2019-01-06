@@ -14,7 +14,7 @@ template<
 class TriangleGrid {
 public:
     // Number of triangles with sides of length SIDE
-    static int constexpr NUM_ELEMS = (SIDE + 1) * (SIDE + 1);
+    static int constexpr NUM_ELEMS = SIDE * SIDE;
 
     std::array<T, NUM_ELEMS> grid;
 

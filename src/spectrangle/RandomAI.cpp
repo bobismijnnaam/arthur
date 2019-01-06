@@ -27,8 +27,10 @@ GameMove randomAI(Spectrangle game, int player, Random& random) {
         // Pick a random position and return it
         int i = 0;
         int targetI = random.range(TileBoard::NUM_ELEMS);
+        std::cout << "targetI: " << targetI << "\n";
         for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
             for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+                std::cout << i << "\n";
                 if (i == targetI) {
                     gm.move.pos = Vec2i(x, y);
                     return gm;
