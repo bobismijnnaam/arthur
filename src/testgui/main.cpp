@@ -17,6 +17,7 @@
 #include "Vec2f.h"
 #include "Vec2i.h"
 #include "SpectrangleTexture.h"
+#include "RandomAI.h"
 
 int main(int, char**)
 {
@@ -81,28 +82,12 @@ int main(int, char**)
     SDL_GLContext scratchContext = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, scratchContext);
 
-    TriangleRenderer triangleRenderer(window, scratchContext);
-
-    TileTexture tile1(100, 100, window, scratchContext, triangleRenderer);
-    tile1.updateState({Color::RED, Color::RED, Color::RED});
-    
-    TileBoard board;
-    board.set({0, 0}, {{Color::RED, Color::RED, Color::RED}});
-    board.set({0, 1}, {{Color::BLUE, Color::BLUE, Color::PURPLE}});
-    board.set({0, 2}, {{Color::GREEN, Color::GREEN, Color::GREEN}});
-    board.set({0, 3}, {{Color::YELLOW, Color::GREEN, Color::YELLOW}});
-    board.set({0, 4}, {{Color::PURPLE, Color::PURPLE, Color::PURPLE}});
-    board.set({0, 5}, {{Color::WHITE, Color::WHITE, Color::WHITE}});
-
     SpectrangleGameStateWindow gameStateWindow("Spectrangle Game State Window", window, scratchContext);
-    PlayersState playerBags;
-    playerBags[0].push({Color::RED, Color::RED, Color::RED});
-    playerBags[1].push({Color::RED, Color::GREEN, Color::BLUE});
-    playerBags[1].push({Color::RED, Color::GREEN, Color::BLUE});
-    playerBags[2].push({Color::RED, Color::GREEN, Color::GREEN});
-    playerBags[2].push({Color::RED, Color::BLUE, Color::BLUE});
-    playerBags[2].push({Color::PURPLE, Color::GREEN, Color::RED});
-    gameStateWindow.updateState(board, playerBags);
+
+    Spectrangle game(2);
+    Random random;
+    int currentPlayer = 0;
+    game.initializePlayerBags(random);
 
     // Main starts here
     bool show_demo_window = false;
@@ -146,6 +131,47 @@ int main(int, char**)
             ImGui::End();
         }
 
+        {
+            ImGui::Begin("Game controls");
+
+            if (ImGui::Button("Reset game")) {
+                game = Spectrangle(2);
+                game.initializePlayerBags(random);
+                currentPlayer = 0;
+            }
+
+            if (ImGui::Button("Random AI move")) {
+                GameMove gameMove = randomAI(game, currentPlayer, random);
+                if (gameMove.moveType == GameMoveType::MOVE) {
+                    game.applyMove(currentPlayer, gameMove.move);
+                } else {
+                    std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
+                }
+                currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
+            }
+
+            if (ImGui::Button("Player move")) {
+                std::cout << "Unsupported!\n";
+                std::exit(1);
+            }
+
+            if (ImGui::Button("Print all tiles!")) {
+                auto const & board = game.getBoard();
+                for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
+                    for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+                        if (auto tileOpt = board.get({x, y})) {
+                            std::cout << *tileOpt << "\n";
+                        }
+                    }
+                }
+            }
+
+            ImGui::Text("Current player: %d", currentPlayer);
+
+            ImGui::End();
+        }
+
+        gameStateWindow.updateState(game);
         gameStateWindow.render();
 
         // Rendering

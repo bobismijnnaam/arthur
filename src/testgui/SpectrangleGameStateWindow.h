@@ -10,7 +10,7 @@ class SpectrangleGameStateWindow {
 public:
     SpectrangleGameStateWindow(char const * windowTitle, SDL_Window* window, SDL_GLContext scratchContext);
 
-    void updateState(TileBoard const & boardArg, PlayersState const & playerBags);
+    void updateState(Spectrangle const & game);
     void render();
     
 private:
@@ -24,5 +24,7 @@ private:
     std::array<std::vector<TileTexture>, MAX_NUM_PLAYERS> tileTextures;
 
     Vec2i inputPos;
+     
+    int numPlayers;
 } ;
 

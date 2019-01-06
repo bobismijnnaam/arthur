@@ -16,6 +16,8 @@ enum class Color : uint8_t {
     WHITE = 32      // 5
 } ;
 
+std::ostream& operator<<(std::ostream& os, Color const clr);
+
 using Rotation = uint8_t;
 using Side = uint8_t;
 using Score = uint8_t;
@@ -55,6 +57,7 @@ struct GameMove {
 
 bool operator==(Tile const & a, Tile const & b);
 bool operator<(Tile const & a, Tile const & b);
+std::ostream& operator<<(std::ostream& os, Tile const & tile);
 bool operator==(Move const & a, Move const & b);
 bool operator<(Move const & a, Move const & b);
 

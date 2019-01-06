@@ -5,6 +5,7 @@
 
 #include "TriangleGrid.h"
 #include "Move.h"
+#include "Random.h"
 
 int const SPECTRANGLE_BOARD_SIDE = 6;
 int const NUM_MAX_POSSIBLE_MOVES = TriangleGrid<int, SPECTRANGLE_BOARD_SIDE>::NUM_ELEMS * 4 * 3;
@@ -22,6 +23,7 @@ public:
     Spectrangle(int numPlayersArg);
 
     void setNumPlayers(int numPlayers);
+    void initializePlayerBags(Random random);
 
     bool isMovePossible(Move const & move) const;
     void applyMove(int player, Move const & move);
@@ -37,15 +39,15 @@ public:
     void giveTileToPlayer(int player, Tile const tile);
     Tile takeTileFromPlayer(int player, int i);
 
-    bool isInitialMoveDone();
-    bool isBagEmpty();
-    int getNumPlayers();
+    bool isInitialMoveDone() const;
+    bool isBagEmpty() const;
+    int getNumPlayers() const;
 
-    PlayersState const & getPlayersState();
-    TileBoard const & getBoard();
+    PlayersState const & getPlayersState() const ;
+    TileBoard const & getBoard() const;
 
-    int getScore(int player);
-    std::optional<int> getWinner();
+    int getScore(int player) const;
+    std::optional<int> getWinner() const;
 
 private:
     TileBoard grid;
@@ -55,8 +57,6 @@ private:
     PlayersState playerBags;
     std::array<int, MAX_NUM_PLAYERS> scores;
 } ;
-
-#include "Random.h"
 
 void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer);
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random);

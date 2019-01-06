@@ -80,6 +80,16 @@ void Spectrangle::setNumPlayers(int numPlayersArg) {
     playerBags.size = numPlayersArg;
 }
 
+void Spectrangle::initializePlayerBags(Random random) {
+    for (int player = 0; player < numPlayers; ++player) {
+        for (int i = 0; i < 4; ++i) {
+            int tileIndex = random.range(getNumTilesAvailable());
+            Tile tile = takeTileFromBag(tileIndex);
+            giveTileToPlayer(player, tile);
+        }
+    }
+}
+
 /**
  * Given a move, checks if the move is possible.
  */
@@ -196,7 +206,7 @@ Color Spectrangle::getNeighbourColorAtSide(Vec2i const pos, Side side) const {
     }   
 }
 
-bool Spectrangle::isBagEmpty() {
+bool Spectrangle::isBagEmpty() const {
     return tileBag.getSize() == 0;
 }
 
@@ -238,23 +248,23 @@ Tile Spectrangle::takeTileFromPlayer(int player, int i) {
     return playerBags[player].removeIndex(i);
 }
 
-PlayersState const & Spectrangle::getPlayersState() {
+PlayersState const & Spectrangle::getPlayersState() const {
     return playerBags;
 }
 
-TileBoard const & Spectrangle::getBoard() {
+TileBoard const & Spectrangle::getBoard() const {
     return grid;
 }
 
-int Spectrangle::getScore(int player) {
+int Spectrangle::getScore(int player) const {
     return scores[player];
 }
 
-bool Spectrangle::isInitialMoveDone() {
+bool Spectrangle::isInitialMoveDone() const {
     return !isInInitialState;
 }
 
-std::optional<int> Spectrangle::getWinner() {
+std::optional<int> Spectrangle::getWinner() const {
     int winner = 0;
     int maxScore = scores[0];
     bool sawDouble = false;
@@ -276,7 +286,7 @@ std::optional<int> Spectrangle::getWinner() {
     }
 }
 
-int Spectrangle::getNumPlayers() {
+int Spectrangle::getNumPlayers() const {
     return numPlayers;
 }
 

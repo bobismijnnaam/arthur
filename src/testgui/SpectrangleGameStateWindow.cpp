@@ -17,19 +17,23 @@ SpectrangleGameStateWindow::SpectrangleGameStateWindow(char const * windowTitleA
     }
 
     hadFirstRender = false;
+
+    numPlayers = 0;
 }
 
-void SpectrangleGameStateWindow::updateState(TileBoard const & board, PlayersState const & playerBags) {
+void SpectrangleGameStateWindow::updateState(Spectrangle const & game) {
     hadFirstRender = true;
 
-    spectrangleTexture.updateState(board);
+    spectrangleTexture.updateState(game.getBoard());
 
     for (int player = 0; player < MAX_NUM_PLAYERS; player++) {
-        PlayerBag const & bag = playerBags[player];
+        PlayerBag const & bag = game.getPlayersState()[player];
         for (int tileIndex = 0; tileIndex < bag.getSize(); tileIndex++) {
             tileTextures[player][tileIndex].updateState(bag[tileIndex]);
         }
     }
+
+    numPlayers = game.getNumPlayers();
 }
 
 void SpectrangleGameStateWindow::render() {
@@ -41,7 +45,7 @@ void SpectrangleGameStateWindow::render() {
     if (hadFirstRender) {
         ImGui::Image(spectrangleTexture.getTexture(), ImVec2(windowSize.x - framePadding.x * 2, windowSize.x - framePadding.x * 2), ImVec2(0,1), ImVec2(1,0), ImColor(255,255,255,255), ImColor(255,255,255,128));
 
-        for (int player = 0; player < MAX_NUM_PLAYERS; player++) {
+        for (int player = 0; player < numPlayers; player++) {
             ImGui::Text("Player %d:", player);
             for (int tileIndex = 0; tileIndex < MAX_TILES_PER_PLAYER; tileIndex++) {
                 ImGui::SameLine();
@@ -61,6 +65,8 @@ void SpectrangleGameStateWindow::render() {
 
     if (inputPos.y >= SPECTRANGLE_BOARD_SIDE) inputPos.y = SPECTRANGLE_BOARD_SIDE - 1;
     if (inputPos.x >= TileBoard::rowLength(inputPos.y)) inputPos.x = TileBoard::rowLength(inputPos.y) - 1;
+
+    ImGui::Text("Num players: %d", numPlayers);
 
     ImGui::End();
 }
