@@ -19,11 +19,18 @@ public:
     std::array<T, NUM_ELEMS> grid;
 
     static bool isPosValid(Vec2i const pos) {
+        // Negative coordinates are not on the grid
+        if (pos.x < 0 || pos.y < 0) {
+            return false;
+        }
+
         int rowStart = pos.y * pos.y;
         int rowEnd = (pos.y + 1) * (pos.y + 1);
 
         return pos.x >= 0 && pos.y >= 0
-            && (pos.y < SIDE) && (pos.x < (rowEnd - rowStart));
+            // Static cast is safe here because we checked it to be non negative earlier
+            && (static_cast<unsigned int>(pos.y) < SIDE) 
+            && (pos.x < (rowEnd - rowStart));
     }
 
     static int rowLength(int y) {

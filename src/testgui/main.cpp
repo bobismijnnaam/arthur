@@ -53,7 +53,7 @@ int main(int, char**)
 
     SDL_DisplayMode current;
     SDL_GetCurrentDisplayMode(0, &current);
-    SDL_Window* window = SDL_CreateWindow("Dear ImGui SDL2+OpenGL3 example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow("Spectrangle Monolithic Player vs. AI", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 
@@ -86,7 +86,6 @@ int main(int, char**)
     TileTexture tile1(100, 100, window, scratchContext, triangleRenderer);
     tile1.updateState({Color::RED, Color::RED, Color::RED});
     
-    SpectrangleTexture spectrangleTexture(500, 500, 0.18, window, scratchContext, triangleRenderer);
     TileBoard board;
     board.set({0, 0}, {{Color::RED, Color::RED, Color::RED}});
     board.set({0, 1}, {{Color::BLUE, Color::BLUE, Color::PURPLE}});
@@ -94,7 +93,6 @@ int main(int, char**)
     board.set({0, 3}, {{Color::YELLOW, Color::GREEN, Color::YELLOW}});
     board.set({0, 4}, {{Color::PURPLE, Color::PURPLE, Color::PURPLE}});
     board.set({0, 5}, {{Color::WHITE, Color::WHITE, Color::WHITE}});
-    spectrangleTexture.updateState(board);
 
     SpectrangleGameStateWindow gameStateWindow("Spectrangle Game State Window", window, scratchContext);
     PlayersState playerBags;

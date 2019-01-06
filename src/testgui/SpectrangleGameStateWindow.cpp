@@ -7,7 +7,7 @@ SpectrangleGameStateWindow::SpectrangleGameStateWindow(char const * windowTitleA
         windowTitle{windowTitleArg},
         scratchContext{contextArg},
         triangleRenderer(window, contextArg),
-        spectrangleTexture(500, 500, 0.18, window, scratchContext, triangleRenderer) {
+        spectrangleTexture(500, 500, 0.33, window, scratchContext, triangleRenderer) {
     
     for (int y = 0; y < MAX_NUM_PLAYERS; y++) {
         std::vector<TileTexture>& playerTiles = tileTextures[y];
@@ -52,6 +52,15 @@ void SpectrangleGameStateWindow::render() {
             }
         }
     }
+
+    ImGui::SliderInt("X pos", &inputPos.x, 0, TileBoard::rowLength(inputPos.y) - 1);
+    ImGui::SliderInt("Y pos", &inputPos.y, 0, SPECTRANGLE_BOARD_SIDE - 1);
+
+    if (inputPos.y < 0) inputPos.y = 0;
+    if (inputPos.x < 0) inputPos.x = 0;
+
+    if (inputPos.y >= SPECTRANGLE_BOARD_SIDE) inputPos.y = SPECTRANGLE_BOARD_SIDE - 1;
+    if (inputPos.x >= TileBoard::rowLength(inputPos.y)) inputPos.x = TileBoard::rowLength(inputPos.y) - 1;
 
     ImGui::End();
 }

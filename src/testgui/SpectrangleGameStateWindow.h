@@ -23,5 +23,6 @@ private:
     SpectrangleTexture spectrangleTexture;
     std::array<std::vector<TileTexture>, MAX_NUM_PLAYERS> tileTextures;
 
+    Vec2i inputPos;
 } ;
 

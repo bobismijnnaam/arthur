@@ -2,7 +2,7 @@
 
 #include "Move.h"
 
-Tile::Tile(Color side1, Color side2, Color side3) : sides{{side1, side2, side3}} {}
+Tile::Tile(Color side1, Color side2, Color side3, Score scoreArg) : sides{{side1, side2, side3}}, score{scoreArg} {}
 
 bool Tile::isSymmetrical() const {
     return sides[0] == sides[1] && sides[1] == sides[2];
@@ -19,6 +19,7 @@ Tile Move::getTile() const {
         tile.sides[(0 + rotation) % 3],
         tile.sides[(1 + rotation) % 3],
         tile.sides[(2 + rotation) % 3],
+        tile.score
     };
 }
 

@@ -18,14 +18,16 @@ enum class Color : uint8_t {
 
 using Rotation = uint8_t;
 using Side = uint8_t;
+using Score = uint8_t;
 
 struct Tile {
     Tile() = default;
-    Tile(Color side1, Color side2, Color side3);
+    Tile(Color side1, Color side2, Color side3, Score scoreArg = 1);
 
     bool isSymmetrical() const;
 
     std::array<Color, 3> sides;
+    uint8_t score;
 } ;
 
 struct Move {
