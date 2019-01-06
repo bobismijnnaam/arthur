@@ -10,7 +10,7 @@ class SpectrangleGameStateWindow {
 public:
     SpectrangleGameStateWindow(char const * windowTitle, SDL_Window* window, SDL_GLContext scratchContext);
 
-    void updateState(Spectrangle const & game);
+    void updateState(Spectrangle const & gameArg);
     void render();
     
 private:
@@ -25,6 +25,6 @@ private:
 
     Vec2i inputPos;
      
-    int numPlayers;
+    Spectrangle game;
 } ;
 

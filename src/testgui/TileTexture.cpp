@@ -63,6 +63,14 @@ void TileTexture::updateState(Tile const & tile) {
             );
 }
 
+void TileTexture::clear() {
+    setContextIfNeeded(window, context);
+    setTextureAsCurrent();
+
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 ImTextureID TileTexture::getTexture() {
     return (ImTextureID)(intptr_t)texID;
 }

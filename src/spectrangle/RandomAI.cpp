@@ -4,7 +4,7 @@
 #include "Spectrangle.h"
 #include "Move.h"
 
-GameMove randomAI(Spectrangle game, int player, Random random) {
+GameMove randomAI(Spectrangle game, int player, Random& random) {
     GameMove gm;
 
     if (!game.isInitialMoveDone()) {

@@ -12,6 +12,7 @@ public:
     TileTexture(int w, int h, SDL_Window* window, SDL_GLContext context, TriangleRenderer& triangleRenderer);
 
     void updateState(Tile const & tile);
+    void clear();
 
     ImTextureID getTexture();
     Vec2i getSize();

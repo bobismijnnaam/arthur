@@ -126,7 +126,7 @@ int main(int, char**)
         {
             ImGui::Begin("Demo window appendix");                          
 
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+            ImGui::Checkbox("Demo Window", &show_demo_window);
 
             ImGui::End();
         }
@@ -143,7 +143,11 @@ int main(int, char**)
             if (ImGui::Button("Random AI move")) {
                 GameMove gameMove = randomAI(game, currentPlayer, random);
                 if (gameMove.moveType == GameMoveType::MOVE) {
+                    game.removeTileFromPlayer(currentPlayer, gameMove.move.tile);
                     game.applyMove(currentPlayer, gameMove.move);
+                    if (!game.isBagEmpty()) {
+                        game.givePlayerRandomTile(currentPlayer, random);
+                    }
                 } else {
                     std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
                 }

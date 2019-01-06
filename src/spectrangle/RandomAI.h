@@ -2,4 +2,4 @@
 #include "Move.h"
 #include "Spectrangle.h"
 
-GameMove randomAI(Spectrangle game, int player, Random random);
+GameMove randomAI(Spectrangle game, int player, Random& random);

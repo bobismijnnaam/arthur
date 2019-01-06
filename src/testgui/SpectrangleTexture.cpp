@@ -36,7 +36,7 @@ SpectrangleTexture::SpectrangleTexture(int w, int h, float cellSide, SDL_Window*
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, texID, 0);
 
     // Set the list of draw buffers.
-    GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    GLenum DrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, DrawBuffers); // "1" is the size of DrawBuffers
 
     // Always check that our framebuffer is ok
@@ -57,6 +57,9 @@ std::array<GLfloat, 3> green = {0, 1, 0};
 void SpectrangleTexture::updateState(TileBoard const & board) {
     setContextIfNeeded(window, context);
     setTextureAsCurrent();
+
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     Vec2f origin {0, 0.85f - equilateralTriangleHeight(cellSide)};
     

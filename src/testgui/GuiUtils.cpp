@@ -39,45 +39,43 @@ void renderTile(Vec2f origin, Vec2i cell, float cellSide, Tile tile, TriangleRen
     float height = equilateralTriangleHeight(cellSide);
 
     Vec2f base = calculateTriangleGridPos(cellSide, origin, cell);
-    Vec2f verticalPoint;
-    Vec2f leftPoint;
-    Vec2f rightPoint;
+    std::array<Vec2f, 3> points;
 
     bool isUpTile = cell.x % 2 == 0;
     if (isUpTile) {
-        verticalPoint = base + Vec2f(0, height);
-        leftPoint = base + Vec2f(-cellSide / 2, 0);
-        rightPoint = base + Vec2f(cellSide / 2, 0);
+        points[0] = base + Vec2f(0, height);
+        points[1] = base + Vec2f(cellSide / 2, 0);
+        points[2] = base + Vec2f(-cellSide / 2, 0);
     } else {
-        verticalPoint = base;
-        leftPoint = base + Vec2f(-cellSide / 2, height);
-        rightPoint = base + Vec2f(cellSide / 2, height);
+        points[0] = base + Vec2f(cellSide / 2, height);
+        points[1] = base;
+        points[2] = base + Vec2f(-cellSide / 2, height);
     }
 
-    Vec2f centerPoint(base.x, (verticalPoint.y + leftPoint.y + rightPoint.y) / 3.0);
+    Vec2f centerPoint(base.x, (points[0].y + points[1].y + points[2].y) / 3.0);
     
     // Right side
     int colorIndex = msbIndex((int) tile.sides[0]);
     triangleRenderer.renderTriangle({
             centerPoint.x, centerPoint.y, 0,
-            verticalPoint.x, verticalPoint.y, 0,
-            rightPoint.x, rightPoint.y, 0
+            points[0].x, points[0].y, 0,
+            points[1].x, points[1].y, 0
     }, tileColorToGLColor[colorIndex]);
 
     // top/bottom side
     colorIndex = msbIndex((int) tile.sides[1]);
     triangleRenderer.renderTriangle({
-        leftPoint.x, leftPoint.y, 0,
-        rightPoint.x, rightPoint.y, 0,
-        centerPoint.x, centerPoint.y, 0
+        centerPoint.x, centerPoint.y, 0,
+        points[1].x, points[1].y, 0,
+        points[2].x, points[2].y, 0,
     }, tileColorToGLColor[colorIndex]);
 
     // Left side
     colorIndex = msbIndex((int) tile.sides[2]);
     triangleRenderer.renderTriangle({
-        leftPoint.x, leftPoint.y, 0,
-        verticalPoint.x, verticalPoint.y, 0,
-        centerPoint.x, centerPoint.y, 0
+        centerPoint.x, centerPoint.y, 0,
+        points[2].x, points[2].y, 0,
+        points[0].x, points[0].y, 0,
     }, tileColorToGLColor[colorIndex]);
 }
 

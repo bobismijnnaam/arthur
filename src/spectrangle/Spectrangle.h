@@ -23,7 +23,7 @@ public:
     Spectrangle(int numPlayersArg);
 
     void setNumPlayers(int numPlayers);
-    void initializePlayerBags(Random random);
+    void initializePlayerBags(Random & random);
 
     bool isMovePossible(Move const & move) const;
     void applyMove(int player, Move const & move);
@@ -38,6 +38,8 @@ public:
     Tile getTileFromPlayer(int player, int i) const;
     void giveTileToPlayer(int player, Tile const tile);
     Tile takeTileFromPlayer(int player, int i);
+    void removeTileFromPlayer(int player, Tile const & tile);
+    void givePlayerRandomTile(int player, Random random);
 
     bool isInitialMoveDone() const;
     bool isBagEmpty() const;
@@ -60,6 +62,7 @@ private:
 
 void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer);
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random);
+std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & random);
 int getMultiplier(Vec2i pos);
 
 #endif // SPECTRANGLE_H

@@ -80,7 +80,7 @@ void Spectrangle::setNumPlayers(int numPlayersArg) {
     playerBags.size = numPlayersArg;
 }
 
-void Spectrangle::initializePlayerBags(Random random) {
+void Spectrangle::initializePlayerBags(Random& random) {
     for (int player = 0; player < numPlayers; ++player) {
         for (int i = 0; i < 4; ++i) {
             int tileIndex = random.range(getNumTilesAvailable());
@@ -149,6 +149,7 @@ Vec2i neighbourCoordinateAtSide(Vec2i const pos, Side side) {
                 std::exit(1);
         }
     } else {
+        // isDownTriangle
         switch (side) {
             case 0:
                 return { pos.x + 1, pos.y };
@@ -246,6 +247,16 @@ void Spectrangle::giveTileToPlayer(int player, Tile const tile) {
 
 Tile Spectrangle::takeTileFromPlayer(int player, int i) {
     return playerBags[player].removeIndex(i);
+}
+
+void Spectrangle::removeTileFromPlayer(int player, Tile const & tile) {
+    playerBags[player].removeElem(tile);
+}
+
+void Spectrangle::givePlayerRandomTile(int player, Random random) {
+    int bagTileIndex = random.range(getNumTilesAvailable());
+    Tile bagTile = takeTileFromBag(bagTileIndex);
+    giveTileToPlayer(player, bagTile);
 }
 
 PlayersState const & Spectrangle::getPlayersState() const {
@@ -364,7 +375,9 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
                 missedTurns = 0;
             } else {
                 // Miss a turn!
-                missedTurns++;
+                if (game.isBagEmpty()) {
+                    missedTurns++;
+                }
 
                 // Either skip a turn or (if the bag is not empty) exchange a tile
                 if (!game.isBagEmpty() && random.range(2) == 0) {
