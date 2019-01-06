@@ -42,6 +42,17 @@ struct Move {
     Rotation rotation;
 } ;
 
+enum class GameMoveType {
+    SKIP,
+    EXCHANGE,
+    MOVE
+} ;
+
+struct GameMove {
+    GameMoveType moveType;
+    Move move;
+} ;
+
 bool operator==(Tile const & a, Tile const & b);
 bool operator<(Tile const & a, Tile const & b);
 bool operator==(Move const & a, Move const & b);
