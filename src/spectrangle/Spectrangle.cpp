@@ -266,6 +266,9 @@ void Spectrangle::exchangePlayerTile(int player, Random & random) {
     int playerTileIndex = random.range(getPlayerNumTiles(player));
     Tile playerTile = takeTileFromPlayer(player, playerTileIndex);
 
+    std::cout << "Bag tile: " << bagTile << "\n";
+    std::cout << "Player tile: " << playerTile << "\n";
+
     putTileInBag(playerTile);
     giveTileToPlayer(player, bagTile);
 }
@@ -409,6 +412,8 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
     }
 
     while (!done) {
+        std::cout << "missedTurns: " << missedTurns << "\n";
+        std::cout << "Bag size: " << game.getNumTilesAvailable() << "\n";
         if (missedTurns == game.getNumPlayers() && game.isBagEmpty()) {
             done = true;
             winner = game.getWinner();
@@ -417,25 +422,24 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
             if (candidateMove) {
                 // If a move is possible it must be done!
                 game.applyMove(currentPlayer, *candidateMove);
+                // TODO: OPTIMIZE FOR PERFORMANCE!
+                game.removeTileFromPlayer(currentPlayer, candidateMove->tile);
+                if (game.getNumTilesAvailable() > 0) {
+                    game.givePlayerRandomTile(currentPlayer, random);
+                }
                 // Reset the missed turns counter to zero because someone made a move
                 missedTurns = 0;
             } else {
                 // Miss a turn!
                 if (game.isBagEmpty()) {
+                    std::cout << "Missed a turn!\n";
                     missedTurns++;
                 }
 
                 // Either skip a turn or (if the bag is not empty) exchange a tile
-                if (!game.isBagEmpty() && random.range(2) == 0) {
-                    // Exchange tiles
-                    int bagTileIndex = random.range(game.getNumTilesAvailable());
-                    int playerTileIndex = random.range(game.getPlayerNumTiles(currentPlayer));
-
-                    Tile bagTile = game.takeTileFromBag(bagTileIndex);
-                    Tile playerTile = game.takeTileFromPlayer(currentPlayer, playerTileIndex);
-
-                    game.giveTileToPlayer(currentPlayer, bagTile);
-                    game.putTileInBag(playerTile);
+                // if (!game.isBagEmpty() && game.getPlayerNumTiles(currentPlayer) > 0 && random.range(2) == 0) {
+                if (!game.isBagEmpty() && game.getPlayerNumTiles(currentPlayer) > 0 && random.range(2) >= 0) {
+                    game.exchangePlayerTile(currentPlayer, random);
                 }
             }
 
