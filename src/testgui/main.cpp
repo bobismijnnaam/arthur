@@ -18,6 +18,7 @@
 #include "Vec2i.h"
 #include "SpectrangleTexture.h"
 #include "RandomAI.h"
+#include "StochasticAI.h"
 
 int main(int, char**)
 {
@@ -142,6 +143,22 @@ int main(int, char**)
 
             if (ImGui::Button("Random AI move")) {
                 GameMove gameMove = randomAI(game, currentPlayer, random);
+                if (gameMove.moveType == GameMoveType::MOVE) {
+                    game.removeTileFromPlayer(currentPlayer, gameMove.move.tile);
+                    game.applyMove(currentPlayer, gameMove.move);
+                    if (!game.isBagEmpty()) {
+                        game.givePlayerRandomTile(currentPlayer, random);
+                    }
+                } else {
+                    std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
+                }
+                currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
+            }
+
+            static int cycles = 1000;
+            ImGui::InputInt("Cycles", &cycles);
+            if (ImGui::Button("Stochastic AI move")) {
+                GameMove gameMove = stochasticAI(game, currentPlayer, random, cycles);
                 if (gameMove.moveType == GameMoveType::MOVE) {
                     game.removeTileFromPlayer(currentPlayer, gameMove.move.tile);
                     game.applyMove(currentPlayer, gameMove.move);

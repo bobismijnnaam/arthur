@@ -9,10 +9,12 @@
 
 int const SPECTRANGLE_BOARD_SIDE = 6;
 int const NUM_MAX_POSSIBLE_MOVES = TriangleGrid<int, SPECTRANGLE_BOARD_SIDE>::NUM_ELEMS * 4 * 3;
+int const NUM_MAX_POSSIBLE_GAMEMOVES = NUM_MAX_POSSIBLE_MOVES + 2;
 int const NUM_TOTAL_TILES = 36;
 int const MAX_TILES_PER_PLAYER = 4;
 int const MAX_NUM_PLAYERS = 4;
 
+using GameMoveBuffer = FixVector<GameMove, NUM_MAX_POSSIBLE_GAMEMOVES>;
 using MoveBuffer = FixVector<Move, NUM_MAX_POSSIBLE_MOVES>;
 using PlayerBag = FixVector<Tile, MAX_TILES_PER_PLAYER>;
 using PlayersState = FixVector<PlayerBag, MAX_NUM_PLAYERS>;
@@ -39,7 +41,8 @@ public:
     void giveTileToPlayer(int player, Tile const tile);
     Tile takeTileFromPlayer(int player, int i);
     void removeTileFromPlayer(int player, Tile const & tile);
-    void givePlayerRandomTile(int player, Random random);
+    void givePlayerRandomTile(int player, Random & random);
+    void exchangePlayerTile(int player, Random & random);
 
     bool isInitialMoveDone() const;
     bool isBagEmpty() const;
@@ -61,6 +64,7 @@ private:
 } ;
 
 void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer);
+void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buffer);
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random);
 std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & random);
 int getMultiplier(Vec2i pos);

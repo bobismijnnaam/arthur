@@ -253,9 +253,20 @@ void Spectrangle::removeTileFromPlayer(int player, Tile const & tile) {
     playerBags[player].removeElem(tile);
 }
 
-void Spectrangle::givePlayerRandomTile(int player, Random random) {
+void Spectrangle::givePlayerRandomTile(int player, Random & random) {
     int bagTileIndex = random.range(getNumTilesAvailable());
     Tile bagTile = takeTileFromBag(bagTileIndex);
+    giveTileToPlayer(player, bagTile);
+}
+
+void Spectrangle::exchangePlayerTile(int player, Random & random) {
+    int bagTileIndex = random.range(getNumTilesAvailable());
+    Tile bagTile = takeTileFromBag(bagTileIndex);
+
+    int playerTileIndex = random.range(getPlayerNumTiles(player));
+    Tile playerTile = takeTileFromPlayer(player, playerTileIndex);
+
+    putTileInBag(playerTile);
     giveTileToPlayer(player, bagTile);
 }
 
@@ -324,6 +335,41 @@ void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer) 
     }
 }
 
+void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buffer) {
+    if (!game.isInitialMoveDone()) {
+        buffer.clear();
+
+        for (int tileIndex = 0; tileIndex < game.getPlayerNumTiles(player); ++tileIndex) {
+            Tile const & tile = game.getTileFromPlayer(player, tileIndex);
+            Rotation const numRotations = tile.isSymmetrical() ? 1 : 3;
+            for (Rotation rotation = 0; rotation < numRotations; ++rotation) {
+                for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
+                    for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+                        buffer.push(GameMove::TileMove({{x, y}, tile, rotation}));
+                    }
+                }
+            }
+        }
+    } else {
+        MoveBuffer moveBuffer;
+        getAllTileMoves(game, player, moveBuffer);
+
+        if (moveBuffer.getSize() == 0) {
+            // Add the skips
+            if (!game.isBagEmpty() && game.getPlayerNumTiles(player) > 0) {
+                buffer.push(GameMove::Exchange());
+            } 
+
+            buffer.push(GameMove::Skip());
+        } else {
+            // Add all the moves as GameMoves
+            for (int i = 0; i < moveBuffer.getSize(); ++i) {
+                buffer.push(GameMove::TileMove(moveBuffer[i]));
+            }
+        }
+    }
+}
+
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random) {
 
     std::optional<Move> move;
@@ -357,7 +403,7 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
     std::optional<int> winner;
     int missedTurns = 0;
 
-    if (game.isInitialMoveDone()) {
+    if (!game.isInitialMoveDone()) {
         std::cout << "Cannot play a random game where the initial move is not yet done!\n";
         std::exit(1);
     }

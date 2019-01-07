@@ -37,6 +37,25 @@ Tile Move::getTile() const {
     };
 }
 
+GameMove GameMove::Skip() {
+    GameMove gm;
+    gm.moveType = GameMoveType::SKIP;
+    return gm;
+}
+
+GameMove GameMove::Exchange() {
+    GameMove gm;
+    gm.moveType = GameMoveType::EXCHANGE;
+    return gm;
+}
+
+GameMove GameMove::TileMove(Move const & move) {
+    GameMove gm;
+    gm.moveType = GameMoveType::MOVE;
+    gm.move = move;
+    return gm;
+}
+
 bool operator==(Tile const & a, Tile const & b) {
     return a.sides == b.sides;
 }
