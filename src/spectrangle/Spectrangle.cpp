@@ -229,6 +229,10 @@ Tile Spectrangle::takeTileFromBag(int i) {
     return tileBag.removeIndex(i);
 }
 
+Tile Spectrangle::getTileFromBag(int i) const {
+    return tileBag[i];
+}
+
 void Spectrangle::putTileInBag(Tile const & tile) {
     tileBag.push(tile);
 }
@@ -265,9 +269,6 @@ void Spectrangle::exchangePlayerTile(int player, Random & random) {
 
     int playerTileIndex = random.range(getPlayerNumTiles(player));
     Tile playerTile = takeTileFromPlayer(player, playerTileIndex);
-
-    std::cout << "Bag tile: " << bagTile << "\n";
-    std::cout << "Player tile: " << playerTile << "\n";
 
     putTileInBag(playerTile);
     giveTileToPlayer(player, bagTile);
@@ -401,6 +402,41 @@ std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Ran
     return move;
 }
 
+bool possibleMoveExists(Spectrangle const & game, Random & random) {
+    // TODO: Could be optimised by specialising this function
+    // instead of reusing pickRandomTile
+
+    std::optional<Move> move;
+
+    for (int player = 0; player < game.getNumPlayers() && !move.has_value(); ++player) {
+        move = pickRandomTileMove(game, player, random);
+    }
+
+    if (move.has_value()) {
+        return true;
+    }
+
+    // Check if any tiles from the bag work
+    int numTiles = game.getNumTilesAvailable();
+    for (int tileIndex = 0; tileIndex < numTiles; tileIndex++) {
+        Tile tile = game.getTileFromBag(tileIndex);
+        Rotation maxNumRotations = tile.isSymmetrical() ? 1 : 3;
+        for (Rotation rot = 0; rot < maxNumRotations; rot++) {
+            for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; y++) {
+                int rowLength = TriangleGrid<bool, SPECTRANGLE_BOARD_SIDE>::rowLength(y);
+                for (int x = 0; x < rowLength; x++) {
+                    Move candidateMove({x, y}, tile, rot);
+                    if (game.isMovePossible(candidateMove)) {
+                        return true;
+                    }
+                }
+            }
+        }   
+    }
+
+    return false;
+}
+
 std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & random) {
     bool done = false;
     std::optional<int> winner;
@@ -412,13 +448,12 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
     }
 
     while (!done) {
-        std::cout << "missedTurns: " << missedTurns << "\n";
-        std::cout << "Bag size: " << game.getNumTilesAvailable() << "\n";
-        if (missedTurns == game.getNumPlayers() && game.isBagEmpty()) {
+        if (missedTurns >= game.getNumPlayers() && !possibleMoveExists(game, random)) {
             done = true;
             winner = game.getWinner();
         } else {
             std::optional<Move> candidateMove = pickRandomTileMove(game, currentPlayer, random);
+
             if (candidateMove) {
                 // If a move is possible it must be done!
                 game.applyMove(currentPlayer, *candidateMove);
@@ -431,16 +466,12 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
                 missedTurns = 0;
             } else {
                 // Miss a turn!
-                if (game.isBagEmpty()) {
-                    std::cout << "Missed a turn!\n";
-                    missedTurns++;
-                }
+                missedTurns++;
 
                 // Either skip a turn or (if the bag is not empty) exchange a tile
-                // if (!game.isBagEmpty() && game.getPlayerNumTiles(currentPlayer) > 0 && random.range(2) == 0) {
-                if (!game.isBagEmpty() && game.getPlayerNumTiles(currentPlayer) > 0 && random.range(2) >= 0) {
+                if (!game.isBagEmpty() && game.getPlayerNumTiles(currentPlayer) > 0 && random.range(2) == 0) {
                     game.exchangePlayerTile(currentPlayer, random);
-                }
+                } 
             }
 
             // Move to next player

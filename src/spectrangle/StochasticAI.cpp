@@ -36,8 +36,6 @@ GameMove stochasticAI(Spectrangle game, int currentPlayer, Random& random, int c
         if (winner && *winner == currentPlayer) {
             winCount[chosenIndex]++;
         }
-
-        std::cout << "Finished a game!\n";
     }
 
     // Find the best move

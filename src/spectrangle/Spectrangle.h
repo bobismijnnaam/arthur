@@ -34,6 +34,7 @@ public:
     int getNumTilesAvailable() const;
     void removeTileFromBag(Tile const tile);
     Tile takeTileFromBag(int i);
+    Tile getTileFromBag(int i) const;
     void putTileInBag(Tile const & tile);
 
     int getPlayerNumTiles(int player) const;
