@@ -144,11 +144,7 @@ int main(int, char**)
             if (ImGui::Button("Random AI move")) {
                 GameMove gameMove = randomAI(game, currentPlayer, random);
                 if (gameMove.moveType == GameMoveType::MOVE) {
-                    game.removeTileFromPlayer(currentPlayer, gameMove.move.tile);
-                    game.applyMove(currentPlayer, gameMove.move);
-                    if (!game.isBagEmpty()) {
-                        game.givePlayerRandomTile(currentPlayer, random);
-                    }
+                    game.applyMove(currentPlayer, gameMove.move, random);
                 } else {
                     std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
                 }
@@ -160,11 +156,7 @@ int main(int, char**)
             if (ImGui::Button("Stochastic AI move")) {
                 GameMove gameMove = stochasticAI(game, currentPlayer, random, cycles);
                 if (gameMove.moveType == GameMoveType::MOVE) {
-                    game.removeTileFromPlayer(currentPlayer, gameMove.move.tile);
-                    game.applyMove(currentPlayer, gameMove.move);
-                    if (!game.isBagEmpty()) {
-                        game.givePlayerRandomTile(currentPlayer, random);
-                    }
+                    game.applyMove(currentPlayer, gameMove.move, random);
                 } else {
                     std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
                 }

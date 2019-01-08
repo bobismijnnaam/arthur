@@ -28,7 +28,8 @@ public:
     void initializePlayerBags(Random & random);
 
     bool isMovePossible(Move const & move) const;
-    void applyMove(int player, Move const & move);
+    void applyMove(int player, Move const & move, Random random);
+    int getNumNeighbours(Vec2i pos) const;
     Color getNeighbourColorAtSide(Vec2i const pos, Side side) const;
 
     int getNumTilesAvailable() const;

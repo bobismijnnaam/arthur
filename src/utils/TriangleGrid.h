@@ -58,7 +58,7 @@ public:
         grid[rowStart + pos.x] = elem;
     }
 
-    void getNeighbours(Vec2i const pos, FixVector<Vec2i, 3> & vec) {
+    static void getNeighbours(Vec2i const pos, FixVector<Vec2i, 3> & vec) {
         // TODO: Move this to a free function or remove it
         vec.clear();
 

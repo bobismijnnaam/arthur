@@ -211,10 +211,32 @@ bool Spectrangle::isBagEmpty() const {
     return tileBag.getSize() == 0;
 }
 
-void Spectrangle::applyMove(int player, Move const & move) {
+void Spectrangle::applyMove(int player, Move const & move, Random random) {
     isInInitialState = false;
     grid.set(move.pos, move.getTile());
-    scores[player] += getMultiplier(move.pos) * move.tile.score;
+    int numNeighbours = getNumNeighbours(move.pos);
+    scores[player] += getMultiplier(move.pos) * move.tile.score * (numNeighbours == 0 ? 1 : numNeighbours);
+
+    // TODO: CAN BE OPTIMIZED!
+    removeTileFromPlayer(player, move.tile);
+    if (getNumTilesAvailable() > 0) {
+        givePlayerRandomTile(player, random);
+    }
+}
+
+int Spectrangle::getNumNeighbours(Vec2i pos) const {
+    FixVector<Vec2i, 3> neighbours;
+    TileBoard::getNeighbours(pos, neighbours);
+
+    int occupiedNeighbours = 0;
+    for (int i = 0; i < neighbours.getSize(); i++) {
+        Vec2i const & pos = neighbours[i];
+        if (grid.get(pos).has_value()) {
+            ++occupiedNeighbours;
+        }
+    }
+
+    return occupiedNeighbours;
 }
 
 int Spectrangle::getNumTilesAvailable() const {
@@ -349,7 +371,10 @@ void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buff
             for (Rotation rotation = 0; rotation < numRotations; ++rotation) {
                 for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
                     for (int x = 0; x < TileBoard::rowLength(y); ++x) {
-                        buffer.push(GameMove::TileMove({{x, y}, tile, rotation}));
+                        // Only add positions if they have no multiplier
+                        if (getMultiplier({x, y}) == 1) {
+                            buffer.push(GameMove::TileMove({{x, y}, tile, rotation}));
+                        }
                     }
                 }
             }
@@ -456,12 +481,8 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
 
             if (candidateMove) {
                 // If a move is possible it must be done!
-                game.applyMove(currentPlayer, *candidateMove);
-                // TODO: OPTIMIZE FOR PERFORMANCE!
-                game.removeTileFromPlayer(currentPlayer, candidateMove->tile);
-                if (game.getNumTilesAvailable() > 0) {
-                    game.givePlayerRandomTile(currentPlayer, random);
-                }
+                game.applyMove(currentPlayer, *candidateMove, random);
+                
                 // Reset the missed turns counter to zero because someone made a move
                 missedTurns = 0;
             } else {

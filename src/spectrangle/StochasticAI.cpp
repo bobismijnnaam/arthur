@@ -25,9 +25,7 @@ GameMove stochasticAI(Spectrangle game, int currentPlayer, Random& random, int c
                 newPlayer = (newPlayer + 1) % newGame.getNumPlayers();
                 break;
             case GameMoveType::MOVE:
-                newGame.applyMove(newPlayer, chosenMove.move);
-                newGame.removeTileFromPlayer(newPlayer, chosenMove.move.tile);
-                newGame.givePlayerRandomTile(newPlayer, random);
+                newGame.applyMove(newPlayer, chosenMove.move, random);
                 newPlayer = (newPlayer + 1) % newGame.getNumPlayers();
                 break;
         }
