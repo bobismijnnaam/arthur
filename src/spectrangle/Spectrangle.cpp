@@ -90,10 +90,21 @@ void Spectrangle::initializePlayerBags(Random& random) {
     }
 }
 
+bool Spectrangle::isMovePossible(int player, Move const & move) const {
+    // The tile should be available
+    if (move.tileIndex >= getPlayerNumTiles(player)) {
+        return false;
+    }
+
+    Tile const & tile = getTileFromPlayer(player, move.tileIndex);
+
+    return isMovePossible(tile, move);
+}
+
 /**
  * Given a move, checks if the move is possible.
  */
-bool Spectrangle::isMovePossible(Move const & move) const {
+bool Spectrangle::isMovePossible(Tile const & tile, Move const & move) const {
     if (!grid.isPosValid(move.pos)) {
         return false;
     }
@@ -102,9 +113,9 @@ bool Spectrangle::isMovePossible(Move const & move) const {
         return false;
     }
 
-    Color color0 = move.getSide(0);
-    Color color1 = move.getSide(1);
-    Color color2 = move.getSide(2);
+    Color color0 = move.getSide(tile, 0);
+    Color color1 = move.getSide(tile, 1);
+    Color color2 = move.getSide(tile, 2);
 
     Color otherColor0 = getNeighbourColorAtSide(move.pos, 0);
     Color otherColor1 = getNeighbourColorAtSide(move.pos, 1);
@@ -213,12 +224,11 @@ bool Spectrangle::isBagEmpty() const {
 
 void Spectrangle::applyMove(int player, Move const & move, Random random) {
     isInInitialState = false;
-    grid.set(move.pos, move.getTile());
+    grid.set(move.pos, move.getTile(getTileFromPlayer(player, move.tileIndex)));
     int numNeighbours = getNumNeighbours(move.pos);
-    scores[player] += getMultiplier(move.pos) * move.tile.score * (numNeighbours == 0 ? 1 : numNeighbours);
+    scores[player] += getMultiplier(move.pos) * playerBags[player][move.tileIndex].score * (numNeighbours == 0 ? 1 : numNeighbours);
 
-    // TODO: CAN BE OPTIMIZED!
-    removeTileFromPlayer(player, move.tile);
+    takeTileFromPlayer(player, move.tileIndex);
     if (getNumTilesAvailable() > 0) {
         givePlayerRandomTile(player, random);
     }
@@ -351,8 +361,8 @@ void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer) 
             for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; y++) {
                 int rowLength = TriangleGrid<bool, SPECTRANGLE_BOARD_SIDE>::rowLength(y);
                 for (int x = 0; x < rowLength; x++) {
-                    Move candidateMove({x, y}, tile, rot);
-                    if (game.isMovePossible(candidateMove)) {
+                    Move candidateMove({x, y}, tileIndex, rot);
+                    if (game.isMovePossible(player, candidateMove)) {
                         buffer.push(candidateMove);
                     }
                 }
@@ -373,7 +383,7 @@ void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buff
                     for (int x = 0; x < TileBoard::rowLength(y); ++x) {
                         // Only add positions if they have no multiplier
                         if (getMultiplier({x, y}) == 1) {
-                            buffer.push(GameMove::TileMove({{x, y}, tile, rotation}));
+                            buffer.push(GameMove::TileMove({{x, y}, tileIndex, rotation}));
                         }
                     }
                 }
@@ -412,8 +422,8 @@ std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Ran
             for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; y++) {
                 int rowLength = TriangleGrid<bool, SPECTRANGLE_BOARD_SIDE>::rowLength(y);
                 for (int x = 0; x < rowLength; x++) {
-                    Move candidateMove({x, y}, tile, rot);
-                    if (game.isMovePossible(candidateMove)) {
+                    Move candidateMove({x, y}, tileIndex, rot);
+                    if (game.isMovePossible(player, candidateMove)) {
                         if (random.range(chanceCounter) == 0) {
                             move = candidateMove;
                         }
@@ -425,6 +435,45 @@ std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Ran
     }
 
     return move;
+}
+
+std::array<Move, NUM_MAX_POSSIBLE_MOVES> getAllPossibleMoves() {
+    std::array<Move, NUM_MAX_POSSIBLE_MOVES> res;
+
+    int i = 0;
+    for (int tileIndex = 0; tileIndex < MAX_TILES_PER_PLAYER; ++tileIndex) {
+        for (Rotation rotation = 0; rotation < 3; rotation++) {
+            for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
+                for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+                    Move candidateMove({x, y}, tileIndex, rotation);
+                    res[i] = candidateMove;
+                    i++;
+                }
+            }
+        }
+    }
+
+    return res;
+}
+
+std::array<Move, NUM_MAX_POSSIBLE_MOVES> allPossibleMoves = getAllPossibleMoves();
+
+std::optional<Move> pickRandomTileMoveFisherYates(Spectrangle const & game, int player, Random & random) {
+    for (int i = 0; i < NUM_MAX_POSSIBLE_MOVES; ++i) {
+        int moveIndex = random.range(NUM_MAX_POSSIBLE_MOVES - i);
+
+        // Swap picked move and move last in the array
+        Move candidateMove = allPossibleMoves[moveIndex];
+        Move moveToBeSaved = allPossibleMoves[NUM_MAX_POSSIBLE_MOVES - i - 1];
+        allPossibleMoves[NUM_MAX_POSSIBLE_MOVES - i - 1] = candidateMove;
+        allPossibleMoves[moveIndex] = moveToBeSaved;
+        
+        if (game.isMovePossible(player, candidateMove)) {
+            return candidateMove;
+        }
+    }
+
+    return {};
 }
 
 bool possibleMoveExists(Spectrangle const & game, Random & random) {
@@ -450,8 +499,8 @@ bool possibleMoveExists(Spectrangle const & game, Random & random) {
             for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; y++) {
                 int rowLength = TriangleGrid<bool, SPECTRANGLE_BOARD_SIDE>::rowLength(y);
                 for (int x = 0; x < rowLength; x++) {
-                    Move candidateMove({x, y}, tile, rot);
-                    if (game.isMovePossible(candidateMove)) {
+                    Move candidateMove({x, y}, tileIndex, rot);
+                    if (game.isMovePossible(tile, candidateMove)) {
                         return true;
                     }
                 }

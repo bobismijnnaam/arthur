@@ -142,6 +142,7 @@ int main(int, char**)
             }
 
             if (ImGui::Button("Random AI move")) {
+                std::cout << "Random ai move!\n";
                 GameMove gameMove = randomAI(game, currentPlayer, random);
                 if (gameMove.moveType == GameMoveType::MOVE) {
                     game.applyMove(currentPlayer, gameMove.move, random);

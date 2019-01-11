@@ -22,18 +22,18 @@ bool Tile::isSymmetrical() const {
     return sides[0] == sides[1] && sides[1] == sides[2];
 }
 
-Move::Move(Vec2i pos, Tile tile, Rotation rotation) : pos{pos}, tile{tile}, rotation{rotation} {}
+Move::Move(Vec2i posArg, int tileIndexArg, Rotation rotationArg) : pos{posArg}, tileIndex{tileIndexArg}, rotation{rotationArg} {}
 
-Color Move::getSide(Side side) const {
+Color Move::getSide(Tile const & tile, Side side) const {
     return tile.sides[(rotation + side) % 3];
 }
 
-Tile Move::getTile() const {
+Tile Move::getTile(Tile const & originalTile) const {
     return {
-        tile.sides[(0 + rotation) % 3],
-        tile.sides[(1 + rotation) % 3],
-        tile.sides[(2 + rotation) % 3],
-        tile.score
+        originalTile.sides[(0 + rotation) % 3],
+        originalTile.sides[(1 + rotation) % 3],
+        originalTile.sides[(2 + rotation) % 3],
+        originalTile.score
     };
 }
 
@@ -70,9 +70,9 @@ std::ostream& operator<<(std::ostream& os, Tile const & tile) {
 }
 
 bool operator==(Move const & a, Move const & b) {
-    return a.pos == b.pos && a.tile == b.tile && a.rotation == b.rotation;
+    return a.pos == b.pos && a.tileIndex == b.tileIndex && a.rotation == b.rotation;
 }
 
 bool operator<(Move const & a, Move const & b) {
-    return std::tie(a.pos, a.tile, a.rotation) < std::tie(b.pos, b.tile, b.rotation);
+    return std::tie(a.pos, a.tileIndex, a.rotation) < std::tie(b.pos, b.tileIndex, b.rotation);
 } 

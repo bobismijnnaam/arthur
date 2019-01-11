@@ -34,13 +34,13 @@ struct Tile {
 
 struct Move {
     Move() = default;
-    Move(Vec2i pos, Tile tile, Rotation rotation);
+    Move(Vec2i posArg, int tileIndexArg, Rotation rotationArg);
 
-    Color getSide(Side side) const;
-    Tile getTile() const;
+    Color getSide(Tile const & tile, Side side) const;
+    Tile getTile(Tile const & originalTile) const;
 
     Vec2i pos;
-    Tile tile;
+    int tileIndex;
     Rotation rotation;
 } ;
 

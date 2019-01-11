@@ -27,7 +27,8 @@ public:
     void setNumPlayers(int numPlayers);
     void initializePlayerBags(Random & random);
 
-    bool isMovePossible(Move const & move) const;
+    bool isMovePossible(int player, Move const & move) const;
+    bool isMovePossible(Tile const & tile, Move const & move) const;
     void applyMove(int player, Move const & move, Random random);
     int getNumNeighbours(Vec2i pos) const;
     Color getNeighbourColorAtSide(Vec2i const pos, Side side) const;
@@ -68,6 +69,7 @@ private:
 void getAllTileMoves(Spectrangle const & game, int player, MoveBuffer & buffer);
 void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buffer);
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random);
+std::optional<Move> pickRandomTileMoveFisherYates(Spectrangle const & game, int player, Random & random);
 std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & random);
 int getMultiplier(Vec2i pos);
 
