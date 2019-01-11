@@ -526,7 +526,8 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
             done = true;
             winner = game.getWinner();
         } else {
-            std::optional<Move> candidateMove = pickRandomTileMove(game, currentPlayer, random);
+            // std::optional<Move> candidateMove = pickRandomTileMove(game, currentPlayer, random);
+            std::optional<Move> candidateMove = pickRandomTileMoveFisherYates(game, currentPlayer, random);
 
             if (candidateMove) {
                 // If a move is possible it must be done!
