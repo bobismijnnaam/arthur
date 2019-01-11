@@ -2,9 +2,11 @@
 #include <SDL.h>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <iostream>
 #include <cmath>
 #include <GL/gl3w.h>
+#include <chrono>
 
 #include "imgui.h"
 #include "imgui_impl_sdl.h"
@@ -153,16 +155,38 @@ int main(int, char**)
             }
 
             static int cycles = 1000;
+            static long long duration = 0;
+            static GameMove gameMove = GameMove::Skip();
             ImGui::InputInt("Cycles", &cycles);
             if (ImGui::Button("Stochastic AI move")) {
-                GameMove gameMove = stochasticAI(game, currentPlayer, random, cycles);
+                auto start = std::chrono::steady_clock::now();
+
+                gameMove = stochasticAI(game, currentPlayer, random, cycles);
                 if (gameMove.moveType == GameMoveType::MOVE) {
                     game.applyMove(currentPlayer, gameMove.move, random);
                 } else {
                     std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
                 }
                 currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
+                
+                duration = std::chrono::duration_cast<std::chrono::milliseconds> 
+                                (std::chrono::steady_clock::now() - start).count();
+                std::cout << "Time: " << duration << "\n";
+
             }
+            ImGui::Text("Duration: %lld", duration);
+            {
+                std::string res;
+                if (gameMove.moveType == GameMoveType::SKIP) {
+                    res = "skip";
+                } else if (gameMove.moveType == GameMoveType::EXCHANGE) {
+                    res = "exchange";
+                } else if (gameMove.moveType == GameMoveType::MOVE) {
+                    res = "move";
+                }
+                ImGui::Text("Was: %s", res.c_str());
+            }
+
 
             if (ImGui::Button("Player move")) {
                 std::cout << "Unsupported!\n";
