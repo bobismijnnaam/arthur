@@ -13,6 +13,7 @@
 #include "imgui_impl_opengl3.h"
 
 #include "Spectrangle.h"
+#include "SpectrangleGame.h"
 #include "SpectrangleGameStateWindow.h"
 #include "TileTexture.h"
 #include "TriangleRenderer.h"
@@ -98,10 +99,8 @@ int main(int, char**)
 
     SpectrangleGameStateWindow gameStateWindow("Spectrangle Game State Window", window, scratchContext);
 
-    Spectrangle game(2);
     Random random;
-    int currentPlayer = 0;
-    game.initializePlayerBags(random);
+    SpectrangleGame game(2, 0, random);
 
     // Main starts here
     bool show_demo_window = false;
@@ -149,20 +148,13 @@ int main(int, char**)
             ImGui::Begin("Game controls");
 
             if (ImGui::Button("Reset game")) {
-                game = Spectrangle(2);
-                game.initializePlayerBags(random);
-                currentPlayer = 0;
+                game = SpectrangleGame(2, 0, random);
             }
 
             if (ImGui::Button("Random AI move")) {
                 std::cout << "Random ai move!\n";
-                GameMove gameMove = randomAI(game, currentPlayer, random);
-                if (gameMove.moveType == GameMoveType::MOVE) {
-                    game.applyMove(currentPlayer, gameMove.move, random);
-                } else {
-                    std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
-                }
-                currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
+                GameMove gameMove = randomAI(game.board, game.currentPlayer, random);
+                game.applyMove(gameMove, random);
             }
 
             if (ImGui::Button("Player move")) {
@@ -171,7 +163,7 @@ int main(int, char**)
             }
 
             if (ImGui::Button("Print all tiles!")) {
-                auto const & board = game.getBoard();
+                auto const & board = game.board.getBoard();
                 for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
                     for (int x = 0; x < TileBoard::rowLength(y); ++x) {
                         if (auto tileOpt = board.get({x, y})) {
@@ -181,8 +173,19 @@ int main(int, char**)
                 }
             }
 
-            ImGui::Text("Current player: %d", currentPlayer);
+            ImGui::Text("Current player: %d", game.currentPlayer);
 
+            ImGui::Text("Game is %s finished", game.isFinished() ? "" : " not ");
+            if (game.isFinished()) {
+                auto possibleWinner = game.getWinner();
+                if (possibleWinner.has_value()) {
+                    ImGui::Text("Winner: %d", *possibleWinner);
+                } else {
+                    ImGui::Text("Winner: tie");
+                }
+            } else {
+                ImGui::Text("Winner: none yet");
+            }
 
             ImGui::End();
         }
@@ -207,7 +210,7 @@ int main(int, char**)
             if (ImGui::Button("Stochastic AI move")) {
                 start = std::chrono::steady_clock::now();
 
-                pausableStochasticAI.setGameAndResetState(game, currentPlayer);
+                pausableStochasticAI.setGameAndResetState(game.board, game.currentPlayer);
                 isCalculating = true;
             }
 
@@ -217,13 +220,7 @@ int main(int, char**)
                 if (pausableStochasticAI.isFinished()) {
                     gameMove = pausableStochasticAI.getBestMove();
                     
-                    if (gameMove.moveType == GameMoveType::MOVE) {
-                        game.applyMove(currentPlayer, gameMove.move, random);
-                    } else {
-                        std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
-                    }
-                    
-                    currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
+                    game.applyMove(gameMove, random);
 
                     isCalculating = false;
                 }
@@ -263,7 +260,7 @@ int main(int, char**)
             ImGui::End();
         }
 
-        gameStateWindow.updateState(game);
+        gameStateWindow.updateState(game.board);
         gameStateWindow.render();
 
         // Rendering

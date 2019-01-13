@@ -3,7 +3,7 @@
 
 class SpectrangleGame {
 public:
-    SpectrangleGame(int numPlayers, int startPlayer);
+    SpectrangleGame(int numPlayers, int startPlayer, Random & random);
 
     void applyMove(GameMove move, Random & random);
 

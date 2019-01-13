@@ -5,8 +5,6 @@ using GameMoveScoreBuffer = FixVector<int, NUM_MAX_POSSIBLE_GAMEMOVES>;
 GameMoveScoreBuffer stochasticAI(Spectrangle game, int currentPlayer, Random& random, int cycles);
 GameMove pickMove(Spectrangle const & game, int currentPlayer, GameMoveScoreBuffer const & winCount);
 
-FixVector<float, NUM_MAX_POSSIBLE_MOVES> normalize(GameMoveScoreBuffer counts);
-
 class PausableStochasticAI {
 public:
     PausableStochasticAI(int cyclesPerIterationArg, int maxCycles);

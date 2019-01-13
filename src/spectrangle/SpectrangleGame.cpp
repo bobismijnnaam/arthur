@@ -3,12 +3,12 @@
 #include "Random.h"
 #include "SpectrangleGame.h"
 
-SpectrangleGame::SpectrangleGame(int numPlayers, int startPlayer)
+SpectrangleGame::SpectrangleGame(int numPlayers, int startPlayer, Random & random)
         : numPlayers{numPlayers}
         , currentPlayer{startPlayer}
         , missedTurns{0}
         , board(numPlayers){
-    
+    board.initializePlayerBags(random);
 }
 
 void SpectrangleGame::applyMove(GameMove move, Random & random) {
@@ -44,5 +44,5 @@ bool SpectrangleGame::isFinished() {
 }
 
 std::optional<int> SpectrangleGame::getWinner() {
-
+    return board.getWinner();
 }
