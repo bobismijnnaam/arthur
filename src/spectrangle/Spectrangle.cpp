@@ -437,17 +437,20 @@ std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Ran
     return move;
 }
 
-std::array<Move, NUM_MAX_POSSIBLE_MOVES> getAllPossibleMoves() {
-    std::array<Move, NUM_MAX_POSSIBLE_MOVES> res;
+using MovesPermutationsBuffer = std::array<MoveBuffer, MAX_TILES_PER_PLAYER>;
 
-    int i = 0;
-    for (int tileIndex = 0; tileIndex < MAX_TILES_PER_PLAYER; ++tileIndex) {
-        for (Rotation rotation = 0; rotation < 3; rotation++) {
-            for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
-                for (int x = 0; x < TileBoard::rowLength(y); ++x) {
-                    Move candidateMove({x, y}, tileIndex, rotation);
-                    res[i] = candidateMove;
-                    i++;
+MovesPermutationsBuffer getAllPossibleMoves() {
+    MovesPermutationsBuffer res;
+
+    for (int numTilesLeft = 1; numTilesLeft <= MAX_TILES_PER_PLAYER; ++numTilesLeft) {
+        MoveBuffer & moveBuffer = res[numTilesLeft - 1];
+        for (int tileIndex = 0; tileIndex < numTilesLeft; ++tileIndex) {
+            for (Rotation rotation = 0; rotation < 3; rotation++) {
+                for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
+                    for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+                        Move candidateMove({x, y}, tileIndex, rotation);
+                        moveBuffer.push(candidateMove);
+                    }
                 }
             }
         }
@@ -456,17 +459,20 @@ std::array<Move, NUM_MAX_POSSIBLE_MOVES> getAllPossibleMoves() {
     return res;
 }
 
-std::array<Move, NUM_MAX_POSSIBLE_MOVES> allPossibleMoves = getAllPossibleMoves();
+MovesPermutationsBuffer allPossibleMoves = getAllPossibleMoves();
 
 std::optional<Move> pickRandomTileMoveFisherYates(Spectrangle const & game, int player, Random & random) {
-    for (int i = 0; i < NUM_MAX_POSSIBLE_MOVES; ++i) {
-        int moveIndex = random.range(NUM_MAX_POSSIBLE_MOVES - i);
+    MoveBuffer & moveBuffer = allPossibleMoves[game.getPlayerNumTiles(player) - 1];
+
+    for (int i = 0; i < moveBuffer.getSize(); ++i) {
+        int moveIndex = random.range(moveBuffer.getSize() - i);
 
         // Swap picked move and move last in the array
-        Move candidateMove = allPossibleMoves[moveIndex];
-        Move moveToBeSaved = allPossibleMoves[NUM_MAX_POSSIBLE_MOVES - i - 1];
-        allPossibleMoves[NUM_MAX_POSSIBLE_MOVES - i - 1] = candidateMove;
-        allPossibleMoves[moveIndex] = moveToBeSaved;
+        Move candidateMove = moveBuffer[moveIndex];
+        Move moveToBeSaved = moveBuffer[NUM_MAX_POSSIBLE_MOVES - i - 1];
+
+        moveBuffer[NUM_MAX_POSSIBLE_MOVES - i - 1] = candidateMove;
+        moveBuffer[moveIndex] = moveToBeSaved;
         
         if (game.isMovePossible(player, candidateMove)) {
             return candidateMove;

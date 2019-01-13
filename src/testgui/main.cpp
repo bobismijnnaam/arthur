@@ -34,6 +34,10 @@ FixVector<float, NUM_MAX_POSSIBLE_MOVES> convert(GameMoveScoreBuffer counts) {
     return res;
 }
 
+int floatToPercentage(float p) {
+    return std::floor(p * 100);
+}
+
 int main(int, char**)
 {
     // Setup SDL
@@ -250,14 +254,32 @@ int main(int, char**)
 
 
             ImVec2 windowSize = ImGui::GetWindowSize();
+            auto testCount = pausableStochasticAI.getTestCount();
             auto winCountI = pausableStochasticAI.getWinCount();
             auto winCountF = convert(winCountI);
+            for (int i = 0; i < winCountF.getSize(); i++) {
+                if (testCount[i] == 0) {
+                    winCountF[i] = 0;
+                } else {
+                    winCountF[i] = winCountF[i] / (float) testCount[i];
+                }
+            }
             int max = pausableStochasticAI.getMaxScore();
 
             ImGui::Text("Win distribution for player: %d", plotIsMeantFor);
-            ImGui::PlotHistogram("Test histogram", winCountF.data.data(), winCountF.getSize(), 0, ("Max score: " + std::to_string(max)).c_str(), 0, FLT_MAX, ImVec2(windowSize.x, 200));
-            ImGui::ProgressBar(pausableStochasticAI.getWinChance(), ImVec2(-1, 0), "Win chance");
-            ImGui::ProgressBar(pausableStochasticAI.getProgress(), ImVec2(-1, 0), pausableStochasticAI.getProgress() >= 1 ? "Done!" : "Progress");
+            ImGui::PlotHistogram("Test histogram", winCountF.data.data(), winCountF.getSize(), 0, ("Max score: " + std::to_string(max)).c_str(), 0, 1, ImVec2(windowSize.x, 200));
+
+            int winChancePercent = floatToPercentage(pausableStochasticAI.getWinChance());
+            std::string overlayText = "Win chance (" + std::to_string(winChancePercent) + "%)";
+            ImGui::ProgressBar(pausableStochasticAI.getWinChance(), ImVec2(-1, 0), overlayText.c_str());
+
+            int progressPercent = floatToPercentage(pausableStochasticAI.getProgress());
+            if (pausableStochasticAI.getProgress() >= 1) {
+                overlayText = "Done! (100%)";
+            } else {
+                overlayText = "Progress (" + std::to_string(progressPercent) + "%)";
+            }
+            ImGui::ProgressBar(pausableStochasticAI.getProgress(), ImVec2(-1, 0), overlayText.c_str());
 
             ImGui::End();
         }

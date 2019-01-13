@@ -147,5 +147,7 @@ float PausableStochasticAI::getWinChance() const {
         testCounts += testCount[i];
     }
 
+    if (testCounts == 0) return 0;
+
     return winCounts / (float) testCounts;
 }

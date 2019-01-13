@@ -1,2 +1,3 @@
-- Spectrangle game class
-- Optimize fisher-yates
+- Plot line for player scores over time
+- Add tile description at "Was: " 
+- Use spectrangle game class in all game-related settings (i.e. stochastic ai, play random game routine)
