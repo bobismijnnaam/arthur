@@ -1,0 +1,2 @@
+- Spectrangle game class
+- Optimize fisher-yates

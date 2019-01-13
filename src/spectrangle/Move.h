@@ -51,11 +51,12 @@ enum class GameMoveType {
 } ;
 
 struct GameMove {
-    static GameMove Skip();
-    static GameMove Exchange();
-    static GameMove TileMove(Move const & move);
+    static GameMove Skip(int player);
+    static GameMove Exchange(int player);
+    static GameMove TileMove(int player, Move const & move);
 
     GameMoveType moveType;
+    int player;
     Move move;
 } ;
 

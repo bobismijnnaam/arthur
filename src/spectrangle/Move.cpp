@@ -37,20 +37,23 @@ Tile Move::getTile(Tile const & originalTile) const {
     };
 }
 
-GameMove GameMove::Skip() {
+GameMove GameMove::Skip(int player) {
     GameMove gm;
+    gm.player = player;
     gm.moveType = GameMoveType::SKIP;
     return gm;
 }
 
-GameMove GameMove::Exchange() {
+GameMove GameMove::Exchange(int player) {
     GameMove gm;
+    gm.player = player;
     gm.moveType = GameMoveType::EXCHANGE;
     return gm;
 }
 
-GameMove GameMove::TileMove(Move const & move) {
+GameMove GameMove::TileMove(int player, Move const & move) {
     GameMove gm;
+    gm.player = player;
     gm.moveType = GameMoveType::MOVE;
     gm.move = move;
     return gm;

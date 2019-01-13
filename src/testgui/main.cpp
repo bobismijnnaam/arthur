@@ -154,40 +154,6 @@ int main(int, char**)
                 currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
             }
 
-            static int cycles = 1000;
-            static long long duration = 0;
-            static GameMove gameMove = GameMove::Skip();
-            ImGui::InputInt("Cycles", &cycles);
-            if (ImGui::Button("Stochastic AI move")) {
-                auto start = std::chrono::steady_clock::now();
-
-                gameMove = stochasticAI(game, currentPlayer, random, cycles);
-                if (gameMove.moveType == GameMoveType::MOVE) {
-                    game.applyMove(currentPlayer, gameMove.move, random);
-                } else {
-                    std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
-                }
-                currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
-                
-                duration = std::chrono::duration_cast<std::chrono::milliseconds> 
-                                (std::chrono::steady_clock::now() - start).count();
-                std::cout << "Time: " << duration << "\n";
-
-            }
-            ImGui::Text("Duration: %lld", duration);
-            {
-                std::string res;
-                if (gameMove.moveType == GameMoveType::SKIP) {
-                    res = "skip";
-                } else if (gameMove.moveType == GameMoveType::EXCHANGE) {
-                    res = "exchange";
-                } else if (gameMove.moveType == GameMoveType::MOVE) {
-                    res = "move";
-                }
-                ImGui::Text("Was: %s", res.c_str());
-            }
-
-
             if (ImGui::Button("Player move")) {
                 std::cout << "Unsupported!\n";
                 std::exit(1);
@@ -205,6 +171,77 @@ int main(int, char**)
             }
 
             ImGui::Text("Current player: %d", currentPlayer);
+
+
+            ImGui::End();
+        }
+
+        {
+            ImGui::Begin("Stochastic AI info");
+
+            static bool isCalculating = false;
+            static int maxCycles = 1000;
+            static int cyclesPerIteration = 50;
+            static GameMove gameMove = GameMove::Skip(0);
+            ImGui::InputInt("Max cycles", &maxCycles);
+            ImGui::InputInt("Cycles per iteration", &cyclesPerIteration);
+
+            static PausableStochasticAI pausableStochasticAI(maxCycles, cyclesPerIteration);
+            pausableStochasticAI.setMaxCycles(maxCycles);
+            pausableStochasticAI.setCyclesPerIteration(cyclesPerIteration);
+
+            static auto start = std::chrono::steady_clock::now();
+            static auto end = std::chrono::steady_clock::now();
+
+            if (ImGui::Button("Stochastic AI move")) {
+                start = std::chrono::steady_clock::now();
+
+                pausableStochasticAI.setGameAndResetState(game, currentPlayer);
+                isCalculating = true;
+            }
+
+            if (isCalculating) {
+                pausableStochasticAI.think(random);
+                
+                if (pausableStochasticAI.isFinished()) {
+                    gameMove = pausableStochasticAI.getBestMove();
+                    
+                    if (gameMove.moveType == GameMoveType::MOVE) {
+                        game.applyMove(currentPlayer, gameMove.move, random);
+                    } else {
+                        std::cout << "Move was: " << (gameMove.moveType == GameMoveType::SKIP ? "SKIP" : "EXCHANGE") << "\n";
+                    }
+                    
+                    currentPlayer = (currentPlayer + 1) % game.getNumPlayers();
+
+                    isCalculating = false;
+                }
+                
+                end = std::chrono::steady_clock::now();
+            }
+
+            ImGui::Text("Duration: %ld", 
+                    std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+                    );
+
+            {
+                std::string res;
+                if (gameMove.moveType == GameMoveType::SKIP) {
+                    res = "skip";
+                } else if (gameMove.moveType == GameMoveType::EXCHANGE) {
+                    res = "exchange";
+                } else if (gameMove.moveType == GameMoveType::MOVE) {
+                    res = "move";
+                }
+                ImGui::Text("Was: %s", res.c_str());
+            }
+
+
+            ImVec2 windowSize = ImGui::GetWindowSize();
+            auto winCount = normalize(pausableStochasticAI.getWinCount());
+
+            ImGui::PlotHistogram("Test histogram", winCount.data.data(), winCount.getSize(), 0, NULL, 0, FLT_MAX, ImVec2(windowSize.x, 200));
+            ImGui::ProgressBar(pausableStochasticAI.getProgress());
 
             ImGui::End();
         }

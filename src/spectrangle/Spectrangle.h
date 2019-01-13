@@ -29,7 +29,7 @@ public:
 
     bool isMovePossible(int player, Move const & move) const;
     bool isMovePossible(Tile const & tile, Move const & move) const;
-    void applyMove(int player, Move const & move, Random random);
+    void applyMove(int player, Move const & move, Random & random);
     int getNumNeighbours(Vec2i pos) const;
     Color getNeighbourColorAtSide(Vec2i const pos, Side side) const;
 
@@ -71,6 +71,7 @@ void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buff
 std::optional<Move> pickRandomTileMove(Spectrangle const & game, int player, Random & random);
 std::optional<Move> pickRandomTileMoveFisherYates(Spectrangle const & game, int player, Random & random);
 std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & random);
+bool possibleMoveExists(Spectrangle const & game);
 int getMultiplier(Vec2i pos);
 
 #endif // SPECTRANGLE_H

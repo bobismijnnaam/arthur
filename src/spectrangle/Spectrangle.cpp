@@ -222,7 +222,7 @@ bool Spectrangle::isBagEmpty() const {
     return tileBag.getSize() == 0;
 }
 
-void Spectrangle::applyMove(int player, Move const & move, Random random) {
+void Spectrangle::applyMove(int player, Move const & move, Random & random) {
     isInInitialState = false;
     grid.set(move.pos, move.getTile(getTileFromPlayer(player, move.tileIndex)));
     int numNeighbours = getNumNeighbours(move.pos);
@@ -383,7 +383,7 @@ void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buff
                     for (int x = 0; x < TileBoard::rowLength(y); ++x) {
                         // Only add positions if they have no multiplier
                         if (getMultiplier({x, y}) == 1) {
-                            buffer.push(GameMove::TileMove({{x, y}, tileIndex, rotation}));
+                            buffer.push(GameMove::TileMove(player, {{x, y}, tileIndex, rotation}));
                         }
                     }
                 }
@@ -396,14 +396,14 @@ void getAllGameMoves(Spectrangle const & game, int player, GameMoveBuffer & buff
         if (moveBuffer.getSize() == 0) {
             // Add the skips
             if (!game.isBagEmpty() && game.getPlayerNumTiles(player) > 0) {
-                buffer.push(GameMove::Exchange());
+                buffer.push(GameMove::Exchange(player));
             } 
 
-            buffer.push(GameMove::Skip());
+            buffer.push(GameMove::Skip(player));
         } else {
             // Add all the moves as GameMoves
             for (int i = 0; i < moveBuffer.getSize(); ++i) {
-                buffer.push(GameMove::TileMove(moveBuffer[i]));
+                buffer.push(GameMove::TileMove(player, moveBuffer[i]));
             }
         }
     }
@@ -476,18 +476,22 @@ std::optional<Move> pickRandomTileMoveFisherYates(Spectrangle const & game, int 
     return {};
 }
 
-bool possibleMoveExists(Spectrangle const & game, Random & random) {
-    // TODO: Could be optimised by specialising this function
-    // instead of reusing pickRandomTile
-
-    std::optional<Move> move;
-
-    for (int player = 0; player < game.getNumPlayers() && !move.has_value(); ++player) {
-        move = pickRandomTileMove(game, player, random);
-    }
-
-    if (move.has_value()) {
-        return true;
+bool possibleMoveExists(Spectrangle const & game) {
+    for (int player = 0; player < game.getNumPlayers(); ++player) {
+        for (int tileIndex = 0; tileIndex < game.getPlayerNumTiles(player); ++tileIndex) {
+            Tile tile = game.getTileFromPlayer(player, tileIndex);
+            int maxNumRotations = tile.isSymmetrical() ? 1 : 3;
+            for (Rotation rotation = 0; rotation < maxNumRotations; ++rotation) {
+                for (int y = 0; y < SPECTRANGLE_BOARD_SIDE; ++y) {
+                    for (int x = 0; x < TileBoard::rowLength(y); ++x) {
+                        Move candidateMove({x, y}, tileIndex, rotation);
+                        if (game.isMovePossible(player, candidateMove)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     // Check if any tiles from the bag work
@@ -522,11 +526,10 @@ std::optional<int> playRandomGame(Spectrangle game, int currentPlayer, Random & 
     }
 
     while (!done) {
-        if (missedTurns >= game.getNumPlayers() && !possibleMoveExists(game, random)) {
+        if (missedTurns >= game.getNumPlayers() && !possibleMoveExists(game)) {
             done = true;
             winner = game.getWinner();
         } else {
-            // std::optional<Move> candidateMove = pickRandomTileMove(game, currentPlayer, random);
             std::optional<Move> candidateMove = pickRandomTileMoveFisherYates(game, currentPlayer, random);
 
             if (candidateMove) {

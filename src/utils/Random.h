@@ -9,6 +9,7 @@ public:
 
     Random(uint64_t x, uint64_t y, uint64_t z);
     Random();
+    Random(const Random&) = delete;
 
     uint64_t next();
     uint64_t range(uint64_t max);
