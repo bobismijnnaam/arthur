@@ -58,22 +58,6 @@ GameMove pickMove(Spectrangle const & game, int currentPlayer, GameMoveScoreBuff
     return bestGameMove;
 }
 
-FixVector<float, NUM_MAX_POSSIBLE_MOVES> normalize(GameMoveScoreBuffer counts) {
-    FixVector<float, NUM_MAX_POSSIBLE_MOVES> res;
-    res.size = counts.size;
-
-    int total = 0;
-    for (int i = 0; i < counts.getSize(); i++) {
-        total += counts[i];
-    }
-
-    for (int i = 0; i < counts.getSize(); i++) {
-        res[i] = counts[i] / (float) total;
-    }
-
-    return res;
-}
-
 //////////////////////////
 // PausableStochasticAI //
 //////////////////////////

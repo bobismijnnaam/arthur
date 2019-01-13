@@ -22,6 +22,17 @@
 #include "RandomAI.h"
 #include "StochasticAI.h"
 
+FixVector<float, NUM_MAX_POSSIBLE_MOVES> convert(GameMoveScoreBuffer counts) {
+    FixVector<float, NUM_MAX_POSSIBLE_MOVES> res;
+    res.size = counts.size;
+
+    for (int i = 0; i < counts.getSize(); i++) {
+        res[i] = counts[i];
+    }
+
+    return res;
+}
+
 int main(int, char**)
 {
     // Setup SDL
@@ -238,9 +249,15 @@ int main(int, char**)
 
 
             ImVec2 windowSize = ImGui::GetWindowSize();
-            auto winCount = normalize(pausableStochasticAI.getWinCount());
+            auto winCountI = pausableStochasticAI.getWinCount();
+            auto winCountF = convert(winCountI);
+            int max = 0;
+            for (int i = 0; i < winCountI.getSize(); ++i) {
+                max = std::max(max, winCountI[i]);
+            }
 
-            ImGui::PlotHistogram("Test histogram", winCount.data.data(), winCount.getSize(), 0, NULL, 0, FLT_MAX, ImVec2(windowSize.x, 200));
+            ImGui::Text("Max score: %d", max);
+            ImGui::PlotHistogram("Test histogram", winCountF.data.data(), winCountF.getSize(), 0, NULL, 0, FLT_MAX, ImVec2(windowSize.x, 200));
             ImGui::ProgressBar(pausableStochasticAI.getProgress());
 
             ImGui::End();
