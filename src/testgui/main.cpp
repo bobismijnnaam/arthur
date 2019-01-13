@@ -194,6 +194,7 @@ int main(int, char**)
             ImGui::Begin("Stochastic AI info");
 
             static bool isCalculating = false;
+            static int plotIsMeantFor = 0;
             static std::array<int, MAX_NUM_PLAYERS> maxCycles = {1000, 1000, 1000, 1000};
             static int cyclesPerIteration = 50;
             static GameMove gameMove = GameMove::Skip(0);
@@ -202,9 +203,6 @@ int main(int, char**)
             ImGui::InputInt("Cycles per iteration", &cyclesPerIteration);
 
             static PausableStochasticAI pausableStochasticAI(100, cyclesPerIteration);
-
-            pausableStochasticAI.setMaxCycles(maxCycles[game.currentPlayer]);
-            pausableStochasticAI.setCyclesPerIteration(cyclesPerIteration);
 
             static auto start = std::chrono::steady_clock::now();
             static auto end = std::chrono::steady_clock::now();
@@ -217,7 +215,11 @@ int main(int, char**)
             }
 
             if (isCalculating) {
+                pausableStochasticAI.setMaxCycles(maxCycles[game.currentPlayer]);
+                pausableStochasticAI.setCyclesPerIteration(cyclesPerIteration);
+
                 pausableStochasticAI.think(random);
+                plotIsMeantFor = game.currentPlayer;
                 
                 if (pausableStochasticAI.isFinished()) {
                     gameMove = pausableStochasticAI.getBestMove();
@@ -250,14 +252,12 @@ int main(int, char**)
             ImVec2 windowSize = ImGui::GetWindowSize();
             auto winCountI = pausableStochasticAI.getWinCount();
             auto winCountF = convert(winCountI);
-            int max = 0;
-            for (int i = 0; i < winCountI.getSize(); ++i) {
-                max = std::max(max, winCountI[i]);
-            }
+            int max = pausableStochasticAI.getMaxScore();
 
-            ImGui::Text("Max score: %d", max);
-            ImGui::PlotHistogram("Test histogram", winCountF.data.data(), winCountF.getSize(), 0, NULL, 0, FLT_MAX, ImVec2(windowSize.x, 200));
-            ImGui::ProgressBar(pausableStochasticAI.getProgress());
+            ImGui::Text("Win distribution for player: %d", plotIsMeantFor);
+            ImGui::PlotHistogram("Test histogram", winCountF.data.data(), winCountF.getSize(), 0, ("Max score: " + std::to_string(max)).c_str(), 0, FLT_MAX, ImVec2(windowSize.x, 200));
+            ImGui::ProgressBar(pausableStochasticAI.getWinChance(), ImVec2(-1, 0), "Win chance");
+            ImGui::ProgressBar(pausableStochasticAI.getProgress(), ImVec2(-1, 0), pausableStochasticAI.getProgress() >= 1 ? "Done!" : "Progress");
 
             ImGui::End();
         }

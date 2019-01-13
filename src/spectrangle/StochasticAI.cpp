@@ -4,13 +4,14 @@
 #include "StochasticAI.h"
 #include "Spectrangle.h"
 
-GameMoveScoreBuffer stochasticAI(Spectrangle game, int currentPlayer, Random& random, int cycles) {
+StochasticScoreResult stochasticAI(Spectrangle game, int currentPlayer, Random& random, int cycles) {
     GameMoveBuffer gameMoveBuffer;
-    FixVector<int, NUM_MAX_POSSIBLE_GAMEMOVES> winCount;
+    StochasticScoreResult scores;
 
     getAllGameMoves(game, currentPlayer, gameMoveBuffer);
     for (int i = 0; i < gameMoveBuffer.getSize(); ++i) {
-        winCount.push(0);
+        scores.winCount.push(0);
+        scores.testCount.push(0);
     }
 
     // Play many games
@@ -23,22 +24,25 @@ GameMoveScoreBuffer stochasticAI(Spectrangle game, int currentPlayer, Random& ra
         switch (chosenMove.moveType) {
             case GameMoveType::EXCHANGE:
                 newGame.exchangePlayerTile(newPlayer, random);
+                break;
             case GameMoveType::SKIP:
-                newPlayer = (newPlayer + 1) % newGame.getNumPlayers();
                 break;
             case GameMoveType::MOVE:
                 newGame.applyMove(newPlayer, chosenMove.move, random);
-                newPlayer = (newPlayer + 1) % newGame.getNumPlayers();
                 break;
         }
 
+        newPlayer = (newPlayer + 1) % newGame.getNumPlayers();
+
         std::optional<int> winner = playRandomGame(newGame, newPlayer, random);
         if (winner && *winner == currentPlayer) {
-            winCount[chosenIndex]++;
+            scores.winCount[chosenIndex]++;
         }
+
+        scores.testCount[chosenIndex]++;
     }
 
-    return winCount;
+    return scores;
 }
 
 GameMove pickMove(Spectrangle const & game, int currentPlayer, GameMoveScoreBuffer const & winCount) {
@@ -69,6 +73,7 @@ PausableStochasticAI::PausableStochasticAI(int cyclesPerIterationArg, int maxCyc
 
     for (int i = 0; i < winCount.getCapacity(); ++i) {
         winCount[i] = 0;
+        testCount[i] = 0;
     }
 }
 
@@ -87,16 +92,19 @@ void PausableStochasticAI::setGameAndResetState(Spectrangle gameArg, int current
 
     for (int i = 0; i < winCount.getCapacity(); ++i) {
         winCount[i] = 0;
+        testCount[i] = 0;
     }
 }
 
 void PausableStochasticAI::think(Random & random) {
-    GameMoveScoreBuffer scoreBuffer = stochasticAI(game, currentPlayer, random, cyclesPerIteration);
+    StochasticScoreResult scores = stochasticAI(game, currentPlayer, random, cyclesPerIteration);
 
-    winCount.size = scoreBuffer.size;
+    winCount.size = scores.winCount.size;
+    testCount.size = scores.testCount.size;
 
-    for (int i = 0; i < scoreBuffer.getSize(); i++) {
-        winCount[i] += scoreBuffer[i];
+    for (int i = 0; i < scores.winCount.getSize(); i++) {
+        winCount[i] += scores.winCount[i];
+        testCount[i] += scores.testCount[i];
     }
 
     cyclesDone += cyclesPerIteration;
@@ -110,10 +118,34 @@ GameMoveScoreBuffer PausableStochasticAI::getWinCount() const {
     return winCount;
 }
 
+GameMoveScoreBuffer PausableStochasticAI::getTestCount() const {
+    return testCount;
+}
+
 GameMove PausableStochasticAI::getBestMove() const {
     return pickMove(game, currentPlayer, winCount);
 }
 
 float PausableStochasticAI::getProgress() const {
     return std::min(cyclesDone, maxCycles) / (float) maxCycles;
+}
+
+int PausableStochasticAI::getMaxScore() const {
+    int max = 0;
+    for (int i = 0; i < winCount.getSize(); ++i) {
+        max = std::max(max, winCount[i]);
+    }
+    return max;
+}
+
+float PausableStochasticAI::getWinChance() const {
+    int winCounts = 0;
+    int testCounts = 0;
+
+    for (int i = 0; i < winCount.getSize(); ++i) {
+        winCounts += winCount[i];
+        testCounts += testCount[i];
+    }
+
+    return winCounts / (float) testCounts;
 }
