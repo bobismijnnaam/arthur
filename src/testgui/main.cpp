@@ -194,14 +194,16 @@ int main(int, char**)
             ImGui::Begin("Stochastic AI info");
 
             static bool isCalculating = false;
-            static int maxCycles = 1000;
+            static std::array<int, MAX_NUM_PLAYERS> maxCycles = {1000, 1000, 1000, 1000};
             static int cyclesPerIteration = 50;
             static GameMove gameMove = GameMove::Skip(0);
-            ImGui::InputInt("Max cycles", &maxCycles);
+
+            ImGui::InputInt4("Max cycles", maxCycles.data());
             ImGui::InputInt("Cycles per iteration", &cyclesPerIteration);
 
-            static PausableStochasticAI pausableStochasticAI(maxCycles, cyclesPerIteration);
-            pausableStochasticAI.setMaxCycles(maxCycles);
+            static PausableStochasticAI pausableStochasticAI(100, cyclesPerIteration);
+
+            pausableStochasticAI.setMaxCycles(maxCycles[game.currentPlayer]);
             pausableStochasticAI.setCyclesPerIteration(cyclesPerIteration);
 
             static auto start = std::chrono::steady_clock::now();
