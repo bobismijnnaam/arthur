@@ -7,3 +7,5 @@ add_subdirectory(testgui)
 add_subdirectory(daemon)
 
 add_subdirectory(spectrangle)
+
+add_subdirectory(server)
